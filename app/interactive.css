@@ -11,7 +11,15 @@ html { scroll-padding-top: 120px; }
 .experience-note { font-size: 12px; line-height: 1.8; color: var(--muted); }
 .hardware-experience { background: #0b3027; }
 .hardware-layout { display: grid; grid-template-columns: 1.4fr .8fr; gap: 55px; align-items: start; }
-.hardware-viewport { height: 560px; position: relative; background: #09271f; }
+.hardware-layout > * { min-width: 0; }
+.hardware-viewport {
+  height: 560px; position: relative; overflow: hidden;
+  background:
+    radial-gradient(ellipse at 32% 18%, #b4aa8e12, transparent 60%),
+    radial-gradient(ellipse at 58% 48%, #24463a 0%, #122e25 48%, #091d18 100%);
+  border: 1px solid #b4c0af14;
+  box-shadow: inset 0 1px 0 #f6f3e908, 0 24px 60px -40px #030c09aa;
+}
 .hardware-viewport > div { height: 100%; }
 .hardware-viewport canvas { cursor: pointer; touch-action: pan-y; }
 .hardware-fallback { height: 100%; display: flex; flex-direction: column; justify-content: center; }

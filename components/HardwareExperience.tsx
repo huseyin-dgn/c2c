@@ -21,22 +21,26 @@ export default function HardwareExperience() {
   const [hovered, setHovered] = useState<HardwareId | null>(null);
   const [exploded, setExploded] = useState(false);
   const [paused, setPaused] = useState(false);
-  const active = hovered ?? selected;
+  const selectPart=(id:HardwareId|null)=>{
+    setHovered(null);
+    setSelected(current=>id===null || current===id?null:id);
+  };
+  const active = selected ?? hovered;
   const part = hardware.find(item => item.id === active);
-  const fallback = <HardwareFallback active={active} exploded={exploded} onSelect={setSelected} />;
-  return <section ref={root} id="donanim" className="hardware-experience interactive-section" data-hardware-selection={active ?? 'none'}>
+  const fallback = <HardwareFallback active={active} exploded={exploded} onSelect={selectPart} />;
+  return <section ref={root} id="donanim" className="hardware-experience interactive-section" data-hardware-selection={active ?? 'none'} data-hardware-selected={selected ?? 'none'}>
     <div className="container">
       <div className="interactive-heading"><span className="eyebrow">İNTERAKTİF BİLGİSAYAR MİMARİSİ</span><h2>Parçaları inceleyin.<br /><em>Sistemi anlayın.</em></h2><p>Donanımın gerçek görevlerini keşfedin; hesaplama, veri ve entegrasyon yaklaşımımızla bağlantısını görün.</p></div>
       <div className="hardware-layout">
         <div className="hardware-stage">
           <div className="hardware-viewport">
-            {reduced || !visible ? fallback : <HardwareBoundary fallback={fallback}><HardwareScene selected={selected} hovered={hovered} exploded={exploded} paused={paused} onSelect={setSelected} onHover={setHovered} /></HardwareBoundary>}
+            {reduced || !visible ? fallback : <HardwareBoundary fallback={fallback}><HardwareScene selected={selected} hovered={hovered} exploded={exploded} paused={paused} onSelect={selectPart} onHover={setHovered} /></HardwareBoundary>}
           </div>
           <div className="hardware-controls"><button type="button" className="quiet-control" aria-pressed={exploded} onClick={()=>setExploded(value=>!value)}>{exploded ? 'Birleştir' : 'Parçaları Keşfet'}</button><button type="button" className="quiet-control" onClick={()=>{setSelected(null);setHovered(null);setExploded(false);}}>Seçimi sıfırla</button><button type="button" className="quiet-control" aria-pressed={paused} onClick={()=>setPaused(value=>!value)} disabled={reduced}>{paused ? 'Donanım akışını sürdür' : 'Donanım akışını duraklat'}</button></div>
-          <p className="experience-note">Özgün donanım görselleştirmesi. Parçaların yerleşimi montaj ilişkilerini açıklar; belirli bir üretici modelinin CAD çizimi değildir.</p>
+          <p className="experience-note">Özgün donanım görselleştirmesi. Işık akışı temsili veri yollarını gösterir. Parçaların yerleşimi montaj ilişkilerini açıklar; belirli bir üretici modelinin CAD çizimi değildir.</p>
         </div>
         <div className="hardware-inspector">
-          <div className="hardware-part-list" role="group" aria-label="Donanım bileşenleri">{hardware.map(item=><button type="button" key={item.id} aria-pressed={selected===item.id} data-hardware-button={item.id} onMouseEnter={()=>setHovered(item.id)} onMouseLeave={()=>setHovered(null)} onFocus={()=>setHovered(item.id)} onBlur={()=>setHovered(null)} onClick={()=>setSelected(item.id)}>{item.name}</button>)}</div>
+          <div className="hardware-part-list" role="group" aria-label="Donanım bileşenleri">{hardware.map(item=><button type="button" key={item.id} aria-pressed={selected===item.id} data-hardware-button={item.id} onMouseEnter={()=>setHovered(item.id)} onMouseLeave={()=>setHovered(null)} onFocus={()=>setHovered(item.id)} onBlur={()=>setHovered(null)} onClick={()=>selectPart(item.id)}>{item.name}</button>)}</div>
           <div className="hardware-description" aria-live="polite" aria-atomic="true">
             <h3>{part?.name ?? 'Bir bileşen seçin.'}</h3>
             <dl><dt>Donanım görevi</dt><dd>{part?.role ?? 'Parçaya dokunun, üzerine gelin veya klavyeyle odaklanıp Enter / Space ile seçin.'}</dd><dt>C2C yaklaşımıyla ilişkisi</dt><dd>{part?.connection ?? 'Donanımın gerçek görevi ile sistem geliştirme yaklaşımımız arasındaki ilişki burada ayrı açıklanır.'}</dd></dl>
