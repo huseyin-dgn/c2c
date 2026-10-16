@@ -99,7 +99,7 @@ export default function ProcessorModel({progress,mobile}:{progress:RefObject<{va
       <group ref={packageGroup}>
       <group ref={layers}>
         <group name="heat-spreader">
-          <mesh geometry={geometry.lid} castShadow receiveShadow><meshStandardMaterial color="#e0e2d9" map={maps.metalColor} metalness={.98} roughness={.75} roughnessMap={maps.metalSurface} normalMap={maps.metalNormal} normalScale={new THREE.Vector2(.16,.16)} envMapIntensity={1.1}/></mesh>
+          <mesh geometry={geometry.lid} castShadow receiveShadow><meshStandardMaterial color="#b4bac0" map={maps.metalColor} metalness={.97} roughness={.92} roughnessMap={maps.metalSurface} normalMap={maps.metalNormal} normalScale={new THREE.Vector2(.2,.2)} envMapIntensity={.72}/></mesh>
         </group>
         <group name="thermal-interface"><mesh geometry={geometry.thermal} castShadow><meshStandardMaterial color="#858a7f" metalness={.1} roughness={.88}/></mesh></group>
         <group name="silicon-die">

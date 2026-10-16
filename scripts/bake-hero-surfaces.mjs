@@ -22,12 +22,14 @@ async function maps(name,source,{roughness=.5,grain=.012,normal=.3,size=256}={})
   await sharp(normalMap,{raw:{width:size,height:size,channels:3}}).png({palette:true,colours:32,dither:0}).toFile(`${dir}/${name}-normal.png`);
 }
 
-// Nickel finish: fine directional machining, restrained laser mark, no decal plane.
-let metal='<rect width="1024" height="1024" fill="#c4c6be"/>';
+// Satin titanium-silver: directional microfinish and a subdued laser tone.
+let metal='<rect width="1024" height="1024" fill="#b8bdc0"/>';
 const noise=random(46);
-for(let y=0;y<N;y++)metal+=`<path d="M0 ${y}h1024" stroke="${y%3?'#737b73':'#f1f1e8'}" stroke-opacity="${.018+noise()*.035}" stroke-width=".7"/>`;
-metal+='<text x="512" y="550" text-anchor="middle" font-family="Arial,sans-serif" font-size="126" font-weight="500" letter-spacing="11" fill="#858d83" fill-opacity=".65">C2C</text>';
-const metalPixels=await rgba(metal);await color('metal-color',metalPixels);await maps('metal',metalPixels,{roughness:.4,grain:.023,normal:1.8});
+for(let y=0;y<N;y++)metal+=`<path d="M0 ${y}h1024" stroke="${y%3?'#697276':'#e1e4e5'}" stroke-opacity="${.012+noise()*.018}" stroke-width=".55"/>`;
+metal+='<text x="512" y="550" text-anchor="middle" font-family="Arial,sans-serif" font-size="126" font-weight="500" letter-spacing="11" fill="#697276" fill-opacity=".3">C2C</text>';
+const metalPixels=await rgba(metal);await color('metal-color',metalPixels);await maps('metal',metalPixels,{roughness:.5,grain:.012,normal:1.6});
+// An isolated material tweak must not regenerate the die or motherboard maps.
+if(process.argv.includes('--metal-only'))process.exit(0);
 
 // Asymmetric representative heterogeneous floorplan: compute clusters, shared
 // SRAM, dense logic and peripheral interfaces, not a decorative checkerboard.
