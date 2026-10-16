@@ -3,6 +3,7 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { use, useCallback, useEffect, useRef, useState, type RefObject, type ReactNode } from 'react';
 import * as THREE from 'three';
 import ProcessorModel from './ProcessorModel';
+import ProcessorStudio, {ProcessorStudioReady} from './ProcessorStudio';
 import { useMediaQuery } from '@/lib/use-media-query';
 import CoreFallback from './CoreFallback';
 import { recordSceneError } from '@/lib/scene-diagnostics';
@@ -14,7 +15,8 @@ type Props = {
   onFail: () => void;
 };
 let studioUsers=0;
-const studioEnvironment=fetch('/models/studio-env.bin.gz').then(async response=>{
+let studioEnvironment:Promise<THREE.DataTexture>|undefined;
+const loadStudioEnvironment=()=>studioEnvironment??=fetch('/models/studio-env.bin.gz').then(async response=>{
   if(!response.ok||!response.body)throw new Error('Stüdyo yansıması yüklenemedi.');
   const bytes=await new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
   if(bytes.byteLength!==studioManifest.bytes)throw new Error('Stüdyo yansıma verisi eksik.');
@@ -24,10 +26,10 @@ const studioEnvironment=fetch('/models/studio-env.bin.gz').then(async response=>
   texture.needsUpdate=true;
   return texture;
 });
-export function StudioReady({children}:{children:ReactNode}) {use(studioEnvironment);return children;}
+export function StudioReady({children}:{children:ReactNode}) {use(loadStudioEnvironment());return children;}
 export function Studio() {
   const { scene,invalidate } = useThree();
-  const texture=use(studioEnvironment);
+  const texture=use(loadStudioEnvironment());
   useEffect(() => {
     studioUsers++;
     // Re-upload this imperative Three texture after its last GPU owner disposed it.
@@ -140,8 +142,8 @@ export default function EngineeringScene({ progress, onReady, onFail }: Props) {
       >
         <HeroContextWatcher onLost={failed}/>
         <HeroGpuLifecycle/>
-        <StudioReady><Studio /><ProcessorModel progress={progress} mobile={mobile} />
-        <RendererWarmup onReady={compiled} onError={failed} /></StudioReady>
+        <ProcessorStudioReady><ProcessorStudio /><ProcessorModel progress={progress} mobile={mobile} />
+        <RendererWarmup onReady={compiled} onError={failed} /></ProcessorStudioReady>
       </Canvas>
     </div>
   );

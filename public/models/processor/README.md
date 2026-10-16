@@ -2,4 +2,10 @@
 
 Original procedural geometry and textures created for this project by scripts/bake-processor.mjs. No external model or texture is incorporated. Three.js (existing project dependency, MIT) is used as a geometry authoring tool.
 
+Task 1.2 surfaces are authored by `scripts/bake-hero-surfaces.mjs`: 1024px WebP albedo, 256px indexed PNG roughness and tangent normals. Fine patterns represent macro floorplan, memory/interconnect regions, passivation and package routing, not visible individual transistors. The C2C laser mark is integrated into the nickel albedo and finish; no floating label mesh is used.
+
+`scripts/bake-hero-studio.mjs` authors the original neutral three-softbox PMREM at size 64, compressed as RGBA half-float CubeUV. It is exclusive to the Hero; the separate interactive hardware section retains its original environment. No visitor-side PMREM generation or postprocessing is required. Raster authoring uses the existing Sharp dependency (Apache-2.0).
+
+The existing IHS includes a merged central underside thermal contact land. TIM and thin laminate bevels are limited by physical layer thickness. These local surface corrections do not change the authored explosion, seating or lid closure travel.
+
 Representative educational package, not a specific commercial CPU or a C2C manufactured product. Heights and layer spacing are expanded for legibility; routing is schematic. Mesh dimensions: 4.06 square, approximately 0.4 assembled thickness including contacts.

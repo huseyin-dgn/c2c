@@ -3,14 +3,14 @@
     "name": "desktop",
     "triangles": 90820,
     "drawCalls": 7,
-    "uncompressedBytes": 4743648,
-    "compressedBytes": 814270
+    "uncompressedBytes": 6015424,
+    "compressedBytes": 1052781
   },
   {
     "name": "mobile",
     "triangles": 7976,
     "drawCalls": 7,
-    "uncompressedBytes": 441376,
-    "compressedBytes": 90793
+    "uncompressedBytes": 539792,
+    "compressedBytes": 110024
   }
 ]

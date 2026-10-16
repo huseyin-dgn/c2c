@@ -11,8 +11,18 @@ test('dolly precedes the cutaway and the final shot restores the mounted package
   assert.equal(coreMotion(1).separation, 0);
   assert.equal(coreMotion(1).integration, 1);
   assert.equal(coreMotion(0).rotation, coreMotion(1).rotation);
-  assert.equal(coreMotion(0).cameraZ, coreMotion(1).cameraZ);
+  assert.equal(coreMotion(0.25).cameraZ, coreMotion(1).cameraZ);
   assert.ok(coreMotion(0.75).cameraY < coreMotion(0).cameraY);
+});
+
+test('dolly never retreats and holds its distance throughout cutaway and closure', () => {
+  let previous=Infinity;
+  const close=coreMotion(.25),distance=(p:number)=>{const m=coreMotion(p);return Math.hypot(m.cameraX,m.cameraY,m.cameraZ);};
+  for(let i=0;i<=1000;i++){
+    const p=i/1000,d=distance(p);
+    assert.ok(d<=previous+1e-10, `camera retreats at ${p}`);previous=d;
+    if(p>=.25)assert.ok(Math.abs(d-Math.hypot(close.cameraX,close.cameraY,close.cameraZ))<1e-10);
+  }
 });
 test('the entire camera and structure state reverses without history or elapsed time', () => {
   const stops = Array.from({ length: 101 }, (_, i) => i / 100);

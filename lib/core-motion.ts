@@ -22,9 +22,9 @@ export const coreKeyframes: readonly CoreKeyframe[] = [
     processing: 0.15,
     integration: 0,
     rotation: -0.10,
-    cameraX: 4.5,
-    cameraY: 3.0,
-    cameraZ: 7.5,
+    cameraX: 4.3,
+    cameraY: 2.15,
+    cameraZ: 7.3,
   },
   {
     separation: 1,
@@ -32,7 +32,7 @@ export const coreKeyframes: readonly CoreKeyframe[] = [
     integration: 0,
     rotation: -0.08,
     cameraX: 4.3,
-    cameraY: 2.5,
+    cameraY: 2.15,
     cameraZ: 7.3,
   },
   {
@@ -40,18 +40,18 @@ export const coreKeyframes: readonly CoreKeyframe[] = [
     processing: 0.75,
     integration: 0.25,
     rotation: -0.07,
-    cameraX: 4.1,
-    cameraY: 2.2,
-    cameraZ: 7.0,
+    cameraX: 4.3,
+    cameraY: 2.15,
+    cameraZ: 7.3,
   },
   {
     separation: 0,
     processing: 0,
     integration: 1,
     rotation: -0.12,
-    cameraX: 8.7,
-    cameraY: 8.4,
-    cameraZ: 12.5,
+    cameraX: 4.3,
+    cameraY: 2.15,
+    cameraZ: 7.3,
   },
 ];
 export function coreMotion(progress: number): CoreKeyframe {
@@ -64,9 +64,9 @@ export function coreMotion(progress: number): CoreKeyframe {
   return Object.fromEntries(
     Object.keys(a).map((key) => {
       const k = key as keyof CoreKeyframe;
-      // Camera and rotation keep continuous velocity across chapter boundaries.
-      // Mechanical assembly remains eased and bounded at the authored poses.
-      if (k.startsWith('camera') || k === 'rotation') {
+      // Bounded smoothstep gives the dolly zero velocity on arrival, without
+      // Hermite overshoot. Keep the authored object rotation and mechanics.
+      if (k === 'rotation') {
         const previous = coreKeyframes[Math.max(0, section - 1)];
         const following = coreKeyframes[Math.min(4, section + 2)];
         const tangentA = section === 0 ? 0 : (b[k] - previous[k]) / 2;

@@ -4,18 +4,21 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { coreMotion } from '@/lib/core-motion';
 import MotherboardModel from './MotherboardModel';
+import { publishHeroProjection } from '@/lib/hero-projection';
 
-const names=['mark','routing','silicon','brushed','shadow'] as const;
+const files={metalColor:'metal-color.webp',metalSurface:'metal-surface.png',metalNormal:'metal-normal.png',siliconColor:'silicon-color.webp',siliconSurface:'silicon-surface.png',siliconNormal:'silicon-normal.png',substrateColor:'substrate-color.webp',substrateSurface:'substrate-surface.png',substrateNormal:'substrate-normal.png',shadow:'shadow.png'} as const;
+const names=Object.keys(files) as (keyof typeof files)[];
 const assets=Promise.all([
   fetch('/models/processor/geometry.json.gz').then(r=>{if(!r.ok||!r.body)throw new Error('Processor geometry unavailable');return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).json();}).then(data=>Object.fromEntries(Object.entries(data).map(([key,value])=>[key,new THREE.BufferGeometryLoader().parse(value as THREE.BufferGeometryJSON)]))),
-  Promise.all(names.map(name=>new THREE.TextureLoader().loadAsync(`/models/processor/${name}.png`))).then(textures=>Object.fromEntries(names.map((name,i)=>{
-    const texture=textures[i];if(name!=='brushed'&&name!=='shadow')texture.colorSpace=THREE.SRGBColorSpace;
-    if(name==='brushed'){texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(3,3);}
+  Promise.all(names.map(name=>new THREE.TextureLoader().loadAsync(`/models/processor/${files[name]}`))).then(textures=>Object.fromEntries(names.map((name,i)=>{
+    const texture=textures[i];if(name.endsWith('Color'))texture.colorSpace=THREE.SRGBColorSpace;
     texture.anisotropy=4;return[name,texture];
   })) as Record<typeof names[number],THREE.Texture>),
 ]);
 let owners=0;
 const lifts=[1.04,1.04,.16,0,-.08,-.16,-.22];
+// Reused scratch vectors: no per-frame allocation for the tracking rig.
+const cpuOffset=new THREE.Vector3(),cameraTarget=new THREE.Vector3();
 
 function Contacts({mobile}:{mobile:boolean}){
   const pads=useRef<THREE.InstancedMesh>(null),caps=useRef<THREE.InstancedMesh>(null);
@@ -56,9 +59,18 @@ export default function ProcessorModel({progress,mobile}:{progress:RefObject<{va
     const bodyOpening=p>.75?.85*settle(.75,.91):m.separation;
     const lidOpening=p>.75?.85*settle(.85,1):m.separation;
     assembly.current.rotation.set(.035,m.rotation+pointer.x*.004,-.025);
-    camera.position.set(m.cameraX*scale,m.cameraY,m.cameraZ*scale);camera.lookAt(0,.05,0);
     if(packageGroup.current)packageGroup.current.position.y=.32*bodyOpening;
     layers.current.children.forEach((layer,i)=>{layer.position.y=lifts[i]*(i<2?lidOpening:bodyOpening);});
+    assembly.current.updateMatrixWorld(true);
+    // Track only the package body's world translation, never the changing
+    // exploded bounds. Both eye and target travel together at a fixed distance.
+    if(packageGroup.current)packageGroup.current.getWorldPosition(cpuOffset).sub(assembly.current.position);
+    camera.position.set(m.cameraX*scale+cpuOffset.x,m.cameraY+cpuOffset.y,m.cameraZ*scale+cpuOffset.z);
+    cameraTarget.set(cpuOffset.x,.05+cpuOffset.y,cpuOffset.z);camera.lookAt(cameraTarget);
+    if(location.search.includes('measure=1')){
+      camera.updateMatrixWorld(true);
+      publishHeroProjection(gl.domElement,camera,layers.current.children[3].children[0] as THREE.Mesh,layers.current.children[2].children[1] as THREE.Mesh,assembly.current,cameraTarget);
+    }
     const c=gl.domElement;
     c.dataset.frames=String(++frames.current);c.dataset.separation=m.separation.toFixed(3);c.dataset.integration=m.integration.toFixed(3);
     c.dataset.camera=camera.position.toArray().map(v=>v.toFixed(2)).join(',');
@@ -84,21 +96,20 @@ export default function ProcessorModel({progress,mobile}:{progress:RefObject<{va
       <group ref={packageGroup}>
       <group ref={layers}>
         <group name="heat-spreader">
-          <mesh geometry={geometry.lid} castShadow receiveShadow><meshStandardMaterial color="#cbd0c7" metalness={.96} roughness={.32} roughnessMap={maps.brushed} bumpMap={maps.brushed} bumpScale={.0015} envMapIntensity={1.15}/></mesh>
-          <mesh position={[0,.278,0]} rotation={[-Math.PI/2,0,0]}><planeGeometry args={[3.2,3.2]}/><meshStandardMaterial map={maps.mark} transparent opacity={.62} metalness={.55} roughness={.5} depthWrite={false}/></mesh>
+          <mesh geometry={geometry.lid} castShadow receiveShadow><meshStandardMaterial color="#e0e2d9" map={maps.metalColor} metalness={.98} roughness={.75} roughnessMap={maps.metalSurface} normalMap={maps.metalNormal} normalScale={new THREE.Vector2(.16,.16)} envMapIntensity={1.1}/></mesh>
         </group>
-        <group name="thermal-interface"><mesh geometry={geometry.thermal} castShadow><meshStandardMaterial color="#9a9f92" metalness={.5} roughness={.66}/></mesh></group>
+        <group name="thermal-interface"><mesh geometry={geometry.thermal} castShadow><meshStandardMaterial color="#858a7f" metalness={.1} roughness={.88}/></mesh></group>
         <group name="silicon-die">
-          <mesh geometry={geometry.die} castShadow receiveShadow><meshStandardMaterial color="#899284" metalness={.78} roughness={.23}/></mesh>
-          <mesh position={[0,.103,0]} rotation={[-Math.PI/2,0,0]} receiveShadow><planeGeometry args={[1.75,1.39]}/><meshStandardMaterial map={maps.silicon} metalness={.78} roughness={.28} envMapIntensity={1.2}/></mesh>
+          <mesh geometry={geometry.die} castShadow receiveShadow><meshStandardMaterial color="#697468" metalness={.7} roughness={.25}/></mesh>
+          <mesh position={[0,.103,0]} rotation={[-Math.PI/2,0,0]} receiveShadow><planeGeometry args={[1.75,1.39]}/>{mobile?<meshStandardMaterial map={maps.siliconColor} roughnessMap={maps.siliconSurface} normalMap={maps.siliconNormal} normalScale={new THREE.Vector2(.12,.12)} metalness={.5} roughness={.6} envMapIntensity={1.1}/>:<meshPhysicalMaterial map={maps.siliconColor} roughnessMap={maps.siliconSurface} normalMap={maps.siliconNormal} normalScale={new THREE.Vector2(.12,.12)} metalness={.5} roughness={.6} clearcoat={.5} clearcoatRoughness={.12} ior={1.46} envMapIntensity={1.1}/>}</mesh>
         </group>
         <group name="upper-substrate">
           <mesh geometry={geometry.substrate} castShadow receiveShadow><meshStandardMaterial color="#28432c" roughness={.5} metalness={.22}/></mesh>
-          <mesh position={[0,.030,0]} rotation={[-Math.PI/2,0,0]} receiveShadow><planeGeometry args={[3.99,3.99]}/><meshStandardMaterial map={maps.routing} color="#40573b" metalness={.25} roughness={.6}/></mesh>
+          <mesh position={[0,.023,0]} rotation={[-Math.PI/2,0,0]} receiveShadow><planeGeometry args={[3.99,3.99]}/><meshStandardMaterial map={maps.substrateColor} roughnessMap={maps.substrateSurface} normalMap={maps.substrateNormal} normalScale={new THREE.Vector2(.18,.18)} metalness={.2} roughness={.95}/></mesh>
           {[-1,1].flatMap(sign=>[-1.25,-.75,-.25,.25,.75,1.25].map(x=><mesh key={`${sign}:${x}`} position={[x,.041,sign*1.91]} castShadow><boxGeometry args={[.15,.035,.075]}/><meshStandardMaterial color="#a3a58f" metalness={.6} roughness={.5}/></mesh>))}
           <mesh position={[-1.85,.021,1.85]} rotation={[-Math.PI/2,0,Math.PI/4]}><circleGeometry args={[.075,3]}/><meshStandardMaterial color="#c8b27b" metalness={.7} roughness={.35}/></mesh>
         </group>
-        <group name="internal-routing"><mesh geometry={geometry.routing} castShadow><meshStandardMaterial color="#aa8d5b" metalness={.8} roughness={.4}/></mesh><mesh position={[0,-.015,0]} rotation={[-Math.PI/2,0,0]}><planeGeometry args={[3.94,3.94]}/><meshStandardMaterial map={maps.routing} color="#c2a36f" metalness={.65} roughness={.4}/></mesh></group>
+        <group name="internal-routing"><mesh geometry={geometry.routing} castShadow><meshStandardMaterial color="#aa8d5b" metalness={.8} roughness={.4}/></mesh><mesh position={[0,-.027,0]} rotation={[-Math.PI/2,0,0]}><planeGeometry args={[3.94,3.94]}/><meshStandardMaterial map={maps.substrateColor} color="#c2a36f" metalness={.65} roughness={.4}/></mesh></group>
         <group name="lower-substrate"><mesh geometry={geometry.substrate} position={[0,-.065,0]} castShadow receiveShadow><meshStandardMaterial color="#203f2c" roughness={.48} metalness={.25}/></mesh></group>
         <group name="land-grid"><Contacts mobile={mobile}/></group>
       </group>

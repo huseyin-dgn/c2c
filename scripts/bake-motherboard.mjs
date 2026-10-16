@@ -91,6 +91,14 @@ for(const mobile of [false,true]){
   for(const [name,list] of Object.entries(bins)){
     if(!list.length)continue;
     const g=mergeVertices(mergeGeometries(list),.0001);triangles+=(g.index?.count||g.getAttribute('position').count)/3;
+    // Surface microfinish only: preserve every existing position and triangle.
+    const vertices=g.getAttribute('position'),normals=g.getAttribute('normal'),uvs=new Float32Array(vertices.count*2);
+    for(let i=0;i<vertices.count;i++){
+      const x=Math.abs(normals.getX(i)),y=Math.abs(normals.getY(i)),z=Math.abs(normals.getZ(i));
+      uvs[i*2]=(x>y&&x>z?vertices.getZ(i):vertices.getX(i))*.5;
+      uvs[i*2+1]=(y>=x&&y>=z?vertices.getZ(i):vertices.getY(i))*.5;
+    }
+    g.setAttribute('uv',new T.BufferAttribute(uvs,2));
     const [color,metalness,roughness]=materials[name];
     const mesh=new T.Mesh(g,new T.MeshStandardMaterial({name,color,metalness,roughness}));mesh.name=name;scene.add(mesh);
   }

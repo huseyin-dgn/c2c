@@ -12,13 +12,19 @@ function outline(w,h,r,Path=T.Shape){
 }
 function body(w,h,d,y,r=.08,hole=0){
   const shape=outline(w,h,r);if(hole)shape.holes.push(outline(hole,hole,.08,T.Path));
-  const g=new T.ExtrudeGeometry(shape,{depth:d,bevelEnabled:true,bevelThickness:.012,bevelSize:.018,bevelSegments:2,steps:1,curveSegments:4});
+  const g=new T.ExtrudeGeometry(shape,{depth:d,bevelEnabled:true,bevelThickness:Math.min(d*.2,.012),bevelSize:Math.min(d*.4,.018),bevelSegments:2,steps:1,curveSegments:4});
   g.rotateX(-Math.PI/2);g.translate(0,y,0);g.clearGroups();
   // Serialize attributes, not ExtrudeGeometry's construction parameters.
   return new T.BufferGeometry().copy(g);
 }
-const lid=mergeGeometries([body(3.56,3.56,.135,.13,.16),body(3.56,3.56,.095,.025,.16,3.07)]);
-const geometries={lid,substrate:body(4.06,4.06,.032,-.016,.085),die:body(1.78,1.42,.052,.038,.025),thermal:body(1.74,1.38,.009,.106,.025),routing:body(3.99,3.99,.005,-.034,.075)};
+const lid=mergeGeometries([body(3.56,3.56,.135,.13,.16),body(3.56,3.56,.095,.025,.16,3.07),body(1.84,1.48,.012,.1124,.04)]);
+// The laser marking belongs to the nickel surface, not a floating decal.
+const position=lid.getAttribute('position'),normal=lid.getAttribute('normal'),uv=lid.getAttribute('uv');
+for(let i=0;i<position.count;i++){
+  if(position.getY(i)>.25&&normal.getY(i)>.5)uv.setXY(i,(position.getX(i)+1.78)/3.56,1-(position.getZ(i)+1.78)/3.56);
+  else uv.setXY(i,.02+position.getX(i)*.001,.02+position.getZ(i)*.001);
+}
+const geometries={lid,substrate:body(4.06,4.06,.032,-.016,.085),die:body(1.78,1.42,.052,.038,.025),thermal:body(1.74,1.38,.005,.1038,.025),routing:body(3.99,3.99,.005,-.034,.075)};
 const json=JSON.stringify(Object.fromEntries(Object.entries(geometries).map(([k,g])=>[k,g.toJSON()])),(_key,value)=>typeof value==='number'?Math.round(value*100000)/100000:value);
 await fs.writeFile(`${out}/geometry.json.gz`,gzipSync(json,{level:9}));
 const png=async(name,svg)=>sharp(Buffer.from(svg)).resize(name==='mark'||name==='shadow'?512:1024).png().toFile(`${out}/${name}.png`);
@@ -49,5 +55,5 @@ const finish=Buffer.alloc(512*512);let seed=42;
 for(let y=0;y<512;y++){seed=(seed*1664525+1013904223)>>>0;const grain=174+(seed%24);for(let x=0;x<512;x++)finish[y*512+x]=grain;}
 await sharp(finish,{raw:{width:512,height:512,channels:1}}).png().toFile(`${out}/brushed.png`);
 await png('shadow',svg('<defs><radialGradient id="s"><stop stop-color="#000" stop-opacity=".5"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs><rect width="1024" height="1024" fill="url(#s)"/>'));
-await fs.writeFile(`${out}/README.md`,'# C2C processor visualization\n\nOriginal procedural geometry and textures created for this project by scripts/bake-processor.mjs. No external model or texture is incorporated. Three.js (existing project dependency, MIT) is used as a geometry authoring tool.\n\nRepresentative educational package, not a specific commercial CPU or a C2C manufactured product. Heights and layer spacing are expanded for legibility; routing is schematic. Mesh dimensions: 4.06 square, approximately 0.4 assembled thickness including contacts.\n');
+// Provenance is maintained in the committed README alongside the assets.
 console.log('Baked processor geometry and restrained PBR surface maps.');

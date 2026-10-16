@@ -1,0 +1,26 @@
+import {chromium} from 'playwright';
+import sharp from 'sharp';
+import fs from 'node:fs/promises';
+const root='artifacts/hero-polish',base=process.env.BASE_URL||'http://localhost:3100';
+const browser=await chromium.launch({channel:'chrome',headless:true});
+try{
+  const page=await browser.newPage({viewport:{width:1920,height:1080},deviceScaleFactor:2});
+  await page.goto(`${base}/?measure=1`,{waitUntil:'networkidle'});
+  await page.locator('.story canvas[data-projection]').waitFor();
+  await page.evaluate(()=>scrollTo(0,innerHeight*4*.6));await page.waitForTimeout(1500);
+  const projection=await page.locator('.story canvas').evaluate(c=>JSON.parse(c.dataset.projection));
+  const screenshot=await page.screenshot({path:`${root}/after/interior-4k.png`});
+  const d=projection.die,padding=12;
+  await sharp(screenshot).extract({left:Math.floor((d.left-padding)*2),top:Math.floor((d.top-padding)*2),width:Math.ceil((d.width+padding*2)*2),height:Math.ceil((d.height+padding*2)*2)}).png().toFile(`${root}/after/die-native-crop.png`);
+  await fs.writeFile(`${root}/after/closeup.json`,JSON.stringify({viewport:[1920,1080],screenshotPixels:[3840,2160],deviceScaleFactor:2,rendererDprCap:1.5,crop:'Native screenshot pixels, no upscale or material retouching',projection},null,2));
+}finally{await browser.close();}
+const before=JSON.parse(await fs.readFile(`${root}/before/projection.json`)),after=JSON.parse(await fs.readFile(`${root}/after/projection.json`));
+const n=v=>v.toFixed(2),range=values=>Math.max(...values)-Math.min(...values);
+const summary=after.map(r=>{
+  const close=r.samples.slice(8),sizes=close.map(s=>s.footprint.width),areas=close.map(s=>s.footprint.area);
+  return {width:r.width,nearWidth:[Math.min(...sizes),Math.max(...sizes)],widthVariationPercent:(Math.max(...sizes)/Math.min(...sizes)-1)*100,areaVariationPercent:(Math.max(...areas)/Math.min(...areas)-1)*100,distanceRange:range(close.map(s=>s.distance)),centerDrift:[range(close.map(s=>s.footprint.centerX)),range(close.map(s=>s.footprint.centerY))],drawCalls:close[0].drawCalls,triangles:close[0].triangles,stages:[0,4,8,12,16,20].map(i=>({percent:i*5,beforeWidth:before.find(b=>b.width===r.width).samples[i].footprint.width,afterWidth:r.samples[i].footprint.width,distance:r.samples[i].distance,center:[r.samples[i].footprint.centerX,r.samples[i].footprint.centerY]}))};
+});
+await fs.writeFile(`${root}/summary.json`,JSON.stringify(summary,null,2));
+const cards=[375,768,1440,1920].map(w=>`<section><h2>${w} px</h2>${[0,20,40,60,80,100].map(p=>`<h3>Scroll ${p}%</h3><div class="pair"><figure><img loading="lazy" src="before/${w}-${p}.png"><figcaption>Önce · 44ab2a4</figcaption></figure><figure><img loading="lazy" src="after/${w}-${p}.png"><figcaption>Sonra · tek yaklaşma ve yakın planda birleşme</figcaption></figure></div>`).join('')}</section>`).join('');
+await fs.writeFile(`${root}/index.html`,`<!doctype html><html lang="tr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>C2C — Hero 1.2 kanıtları</title><style>body{margin:0;background:#071e18;color:#f4f0e6;font:16px/1.6 system-ui}main{max-width:1500px;margin:auto;padding:40px 24px}h1{font-weight:400;font-size:clamp(30px,5vw,60px)}h2{border-bottom:1px solid #827654;padding-top:70px;font-size:32px}h3{font-weight:400}.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}figure{margin:0}img,video{width:100%;height:auto;display:block}figcaption,small{color:#c4b488}a{color:#d8c391}table{border-collapse:collapse;width:100%}td,th{padding:12px;border-bottom:1px solid #355045;text-align:left}@media(max-width:650px){.pair{grid-template-columns:1fr}td,th{padding:5px;font-size:12px}}</style><main><small>C2C MÜHENDİSLİK · GÖREV 1.2</small><h1>Yüzey, ışık ve tutarlı kamera.</h1><p>Gerçek Chrome / WebGL görüntüleri. Kişisel tarayıcı oturumundan bağımsız. CPU boyutu, açılan parçaların toplam boşluğu yerine sabit altlık geometrisinin kamera projeksiyonundan ölçülür.</p><table><tr><th>Genişlik</th><th>Yakın plan CPU</th><th>Boyut değişimi %40–100</th><th>Merkez kayması X / Y</th><th>Draw call</th></tr>${summary.map(s=>`<tr><td>${s.width}</td><td>${s.nearWidth.map(n).join(' – ')} px</td><td>%${n(s.widthVariationPercent)}</td><td>${s.centerDrift.map(n).join(' / ')} px</td><td>${s.drawCalls}</td></tr>`).join('')}</table><p>Görsel kalite değerlendirmesi özneldir; bunlar temsili paket ve devre bölgeleridir. Fiziksel cihazlarda mobil FPS, sıcaklık ve pil tüketimi ölçülmemiştir.</p><h2>İleri / geri scroll</h2><video controls preload="metadata" src="recording/c2c-processor-hero.webm"></video><h2>İç yapı · 3840 × 2160 ekran kaydı</h2><a href="after/interior-4k.png"><img src="after/interior-4k.png" alt="CPU açık katmanları"></a><h3>Silikon · doğal piksel kırpımı</h3><a href="after/die-native-crop.png"><img style="max-width:800px" src="after/die-native-crop.png" alt="Silikon yakın planı"></a><p><a href="summary.json">Ölçüm özeti</a> · <a href="after/projection.json">Ham ileri / geri ölçümleri</a> · <a href="lighthouse/desktop-after.report.html">Desktop Lighthouse</a> · <a href="lighthouse/mobile-after.report.html">Mobile Lighthouse</a></p>${cards}</main></html>`);
+console.log(summary.map(s=>({width:s.width,variation:s.widthVariationPercent,distanceRange:s.distanceRange})));
