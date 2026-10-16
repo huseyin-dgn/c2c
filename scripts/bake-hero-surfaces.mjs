@@ -6,13 +6,14 @@ const svg=body=>`<svg xmlns="http://www.w3.org/2000/svg" width="${N}" height="${
 const rgba=async body=>sharp(Buffer.from(svg(body))).ensureAlpha().raw().toBuffer();
 const color=async(name,data,size=N)=>sharp(data,{raw:{width:N,height:N,channels:4}}).resize(size).webp({quality:92,alphaQuality:100}).toFile(`${dir}/${name}.webp`);
 function random(seed){let s=seed;return()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
-async function maps(name,source,{roughness=.5,grain=.012,normal=.3,size=256}={}){
+async function maps(name,source,{roughness=.5,grain=.012,normal=.3,size=256,stamp}={}){
   const pixels=await sharp(source,{raw:{width:N,height:N,channels:4}}).resize(size).raw().toBuffer();
+  const stampPixels=stamp?await sharp(stamp,{raw:{width:N,height:N,channels:4}}).resize(size).extractChannel(3).raw().toBuffer():null;
   const surface=Buffer.alloc(size*size*3),height=new Float32Array(size*size),normalMap=Buffer.alloc(size*size*3),noise=random(712);
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){
     const i=y*size+x,j=i*4,luma=(pixels[j]+pixels[j+1]+pixels[j+2])/765,n=noise()-.5;
     height[i]=luma*.14+n*grain+Math.sin(y*2.27)*grain;
-    surface[i*3]=255;surface[i*3+1]=Math.round(255*Math.min(.95,Math.max(.05,roughness+(luma-.4)*.17+n*grain*2)));surface[i*3+2]=Math.round(180+luma*65);
+    surface[i*3]=255;surface[i*3+1]=Math.round(255*Math.min(.95,Math.max(.05,roughness+(luma-.4)*.17+n*grain*2+(stampPixels?.[i]||0)/255*.065)));surface[i*3+2]=Math.round(180+luma*65);
   }
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){
     const i=y*size+x,dx=(height[y*size+Math.min(size-1,x+1)]-height[y*size+Math.max(0,x-1)])*normal,dy=(height[Math.min(size-1,y+1)*size+x]-height[Math.max(0,y-1)*size+x])*normal;
@@ -26,8 +27,13 @@ async function maps(name,source,{roughness=.5,grain=.012,normal=.3,size=256}={})
 let metal='<rect width="1024" height="1024" fill="#b8bdc0"/>';
 const noise=random(46);
 for(let y=0;y<N;y++)metal+=`<path d="M0 ${y}h1024" stroke="${y%3?'#697276':'#e1e4e5'}" stroke-opacity="${.012+noise()*.018}" stroke-width=".55"/>`;
-metal+='<text x="512" y="550" text-anchor="middle" font-family="Arial,sans-serif" font-size="126" font-weight="500" letter-spacing="11" fill="#697276" fill-opacity=".3">C2C</text>';
-const metalPixels=await rgba(metal);await color('metal-color',metalPixels);await maps('metal',metalPixels,{roughness:.5,grain:.012,normal:1.6});
+// Original small etched brand field; no copied commercial CPU insignia.
+const badge='<rect x="408" y="408" width="208" height="208" rx="2"';
+const lettering='<text x="512" y="538" text-anchor="middle" font-family="Arial,sans-serif" font-size="70" font-weight="500" letter-spacing="5"';
+metal+=`${badge} fill="#7c878d" fill-opacity=".055" stroke="#5f6c72" stroke-opacity=".28" stroke-width="1.4"/>${lettering} fill="#59656b" fill-opacity=".42">C2C</text>`;
+// Locally matte ink/laser finish: the small mark must not catch a bright gloss.
+const stamp=await rgba(`${badge} fill="white" fill-opacity=".08" stroke="white" stroke-opacity=".3" stroke-width="1.4"/>${lettering} fill="white">C2C</text>`);
+const metalPixels=await rgba(metal);await color('metal-color',metalPixels);await maps('metal',metalPixels,{roughness:.5,grain:.012,normal:1.6,stamp});
 // An isolated material tweak must not regenerate the die or motherboard maps.
 if(process.argv.includes('--metal-only'))process.exit(0);
 
