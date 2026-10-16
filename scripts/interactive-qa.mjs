@@ -21,6 +21,7 @@ try{
     const context=await browser.newContext({viewport,hasTouch:viewport.width<1024,reducedMotion:'no-preference',recordVideo:viewport.width===1440?{dir:output,size:{width:1440,height:900}}:undefined});
     page=await context.newPage();page.on('pageerror',error=>report.errors.push(error.message));page.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());});
     await page.goto(base,{waitUntil:'networkidle'});
+    if(viewport.width<1024){await page.waitForFunction(()=>document.querySelector('.story')?.dataset.renderer==='poster');await page.evaluate(()=>scrollTo(0,12));}
     await page.waitForSelector('.story canvas[data-camera]');
     await page.mouse.move(0,0);
     const result={...viewport,hardware:[],camera:[],showcase:[],pipeline:[],overflow:[]};

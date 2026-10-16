@@ -59,7 +59,7 @@ function LivePanel() {
       const story = ScrollTrigger.getById('engineering-story');
       const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
       let renderer = 'Erişilemiyor';
-      let webgl = reduced ? 'Reduced motion nedeniyle kapalı' : 'Başlatılıyor';
+      let webgl = reduced ? 'Reduced motion nedeniyle kapalı' : root?.dataset.renderer==='poster' ? 'Kaydırma bekleniyor (poster)' : 'Başlatılıyor';
       try {
         const gl = canvas?.getContext('webgl2');
         if (gl && !gl.isContextLost()) {

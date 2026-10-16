@@ -14,7 +14,8 @@ try {
   for (const width of [375, 768, 1440, 1920]) {
     await page.setViewportSize({ width, height: width < 800 ? 900 : 1000 });
     await page.goto(base, { waitUntil: 'networkidle' });
-    await page.waitForSelector('canvas[data-model="industrial-modular-assembly"]');
+    if(width<1024){await page.waitForFunction(()=>document.querySelector('.story')?.dataset.renderer==='poster');await page.evaluate(()=>scrollTo(0,12));}
+    await page.waitForSelector('canvas[data-model="motherboard-processor"]');
     const sections = await page.locator('[data-motion-region]').evaluateAll(elements => elements.map(element => element.dataset.motionRegion));
     assert.deepEqual(sections, ['about']);
     assert.equal(await page.locator('.project-card').count(), 0, 'no portfolio grid on homepage');

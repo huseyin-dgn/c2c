@@ -1,8 +1,8 @@
 'use client';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { Component, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { ArrowDown, ArrowUpRight, Pause, Play } from 'lucide-react';
+import { Component, useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { ArrowDown, ArrowUpRight } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import CoreFallback from './CoreFallback';
@@ -10,9 +10,11 @@ import { useMediaQuery } from '@/lib/use-media-query';
 import SceneDebugPanel from './SceneDebugPanel';
 import { recordSceneError } from '@/lib/scene-diagnostics';
 import { requestScrollRefresh } from '@/lib/use-scroll-layout';
+import ProcessorPoster from './ProcessorPoster';
+import './processor-world.css';
 const Scene = dynamic(() => import('./EngineeringScene'), {
   ssr: false,
-  loading: () => <CoreFallback />,
+  loading: () => null,
 });
 class SceneBoundary extends Component<
   { children: ReactNode; onFail: () => void },
@@ -38,21 +40,21 @@ const chapters = [
   },
   {
     label: 'AYRIŞTIRMA',
-    title: 'Karmaşığı\nanlaşılır kılarız.',
+    title: 'Önce bütünü,\nsonra katmanları.',
     description:
-      'Problemi katmanlarına ayırır; veriyi, ihtiyaçları ve teknik sınırları görünür hale getiririz.',
+      'Anakarttan işlemciye yaklaşırız. Biz de sistemi bütünüyle ele alır, çözümün odak noktasını belirleriz.',
   },
   {
     label: 'MÜHENDİSLİK ZEKÂSI',
-    title: 'Her katman,\nbirlikte düşünür.',
+    title: 'Her katmanın,\nbir görevi var.',
     description:
-      'Algoritmalar ve veri akışları ortak bir mimaride buluşur. Parçalar arasında anlamlı bağlantılar kurulur.',
+      'Silikon yonga, bağlantılar ve altlık ortak bir mimaride çalışır. Yazılımda da algoritmaları ve veri akışlarını aynı titizlikle kurgularız.',
   },
   {
     label: 'ENTEGRASYON',
     title: 'Parçalardan,\nçalışan bir sisteme.',
     description:
-      'Bileşenler, mevcut iş akışınıza bağlanan bütünlüklü ve sürdürülebilir bir çözüme dönüşür.',
+      'Katmanlar yeniden birleşir, paket tamamlanır. Geliştirdiğimiz bileşenler de mevcut iş akışınıza bağlanan bütünlüklü bir çözüme dönüşür.',
   },
 ];
 export default function Story() {
@@ -60,11 +62,21 @@ export default function Story() {
     stage = useRef<HTMLDivElement>(null);
   const motion = useRef({ value: 0 });
   const invalidateScene = useRef<() => void>(() => {});
-  const [active, setActive] = useState(0),
-    [paused, setPaused] = useState(false);
+  const [active, setActive] = useState(0);
   const [renderState, setRenderState] = useState<'loading' | 'webgl' | 'fallback'>('loading');
+  const failed=useCallback(()=>setRenderState('fallback'),[]);
+  const ready=useCallback((invalidate:()=>void)=>{invalidateScene.current=invalidate;setRenderState('webgl');},[]);
   const activeRef = useRef(0);
   const reduced = useMediaQuery('(prefers-reduced-motion: reduce)', true);
+  const mobile = useMediaQuery('(max-width:1023px)', true);
+  const [intent,setIntent]=useState(false);
+  const showScene=!mobile||intent;
+  useEffect(()=>{
+    if(!mobile||intent||reduced)return;
+    const activate=()=>{if(scrollY>4&&root.current&&root.current.getBoundingClientRect().bottom>0)setIntent(true);};
+    window.addEventListener('scroll',activate,{passive:true});
+    return()=>window.removeEventListener('scroll',activate);
+  },[mobile,intent,reduced]);
   useLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
     const mm = gsap.matchMedia();
@@ -131,25 +143,24 @@ export default function Story() {
       id="deneyim"
       className="story"
       data-progress="0"
-      data-renderer={reduced ? 'reduced-motion' : renderState}
+      data-renderer={reduced ? 'reduced-motion' : !showScene ? 'poster' : renderState}
       aria-label="Mühendislik dönüşümü"
     >
       <div ref={stage} className="story-stage">
         <div className="story-atmosphere" aria-hidden="true" />
         <div className="scene-shell" aria-hidden="true">
-          <SceneBoundary onFail={() => setRenderState('fallback')}>
+          <SceneBoundary onFail={failed}>
             {reduced ? (
               <CoreFallback />
             ) : (
-              <Scene
+              <>
+              <ProcessorPoster hidden={renderState==='fallback'}/>
+              {showScene&&<Scene
                 progress={motion}
-                paused={paused}
-                onReady={(invalidate) => {
-                  invalidateScene.current = invalidate;
-                  setRenderState('webgl');
-                }}
-                onFail={() => setRenderState('fallback')}
-              />
+                onReady={ready}
+                onFail={failed}
+              />}
+              </>
             )}
           </SceneBoundary>
         </div>
@@ -206,7 +217,7 @@ export default function Story() {
         <div className="scene-caption" aria-hidden="true">
           <span className="caption-rule" />
           <span>
-            Bir sistemin dönüşümü<small>Analizden entegrasyona.</small>
+            Temsili sistem mimarisi<small>Mühendislik yaklaşımımızın görsel metaforu.</small>
           </span>
           <span className="caption-dot" />
         </div>
@@ -226,18 +237,7 @@ export default function Story() {
               </span>
             ))}
           </div>
-          {!reduced && (
-            <button
-              type="button"
-              className="motion-toggle"
-              aria-pressed={paused}
-              aria-label={paused ? 'Veri akışını sürdür' : 'Veri akışını duraklat'}
-              onClick={() => setPaused(!paused)}
-            >
-              {paused ? <Play size={13} /> : <Pause size={13} />}
-              <span>{paused ? 'Veri akışını sürdür' : 'Veri akışını duraklat'}</span>
-            </button>
-          )}
+
         </div>
         <div className="story-progress-track" aria-hidden="true">
           <span />

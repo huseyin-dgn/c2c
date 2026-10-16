@@ -29,6 +29,7 @@ page.on('console', (message) => {
   if (message.type() === 'error') report.consoleErrors.push(message.text());
 });
 async function ready() {
+  if(page.viewportSize().width<1024){await page.waitForFunction(()=>document.querySelector('.story')?.dataset.renderer!=='reduced-motion');await page.evaluate(()=>scrollTo(0,12));}
   await page.waitForFunction(
     () => document.querySelector('.story')?.dataset.renderer === 'webgl',
     {},
@@ -77,7 +78,7 @@ try {
     await page.setViewportSize(viewport);
     await page.goto(base, { waitUntil: 'networkidle' });
     await ready();
-    await page.getByRole('button', { name: 'Veri akışını duraklat' }).click();
+    // CPU motion is scroll-driven and stops rendering at rest.
     await page.mouse.move(0, 0);
     const result = { ...viewport, stages: [], reverse: [], differences: [] };
     const images = [];
@@ -224,7 +225,7 @@ try {
       note: 'Headless desktop laboratory sample, not a physical mobile FPS claim.',
     };
   });
-  await page.getByRole('button', { name: 'Veri akışını duraklat' }).click();
+  // CPU motion is scroll-driven and stops rendering at rest.
   const camera = await page.locator('.story canvas').getAttribute('data-camera');
   await page.waitForTimeout(600);
   assert.equal(await page.locator('.story canvas').getAttribute('data-camera'), camera);

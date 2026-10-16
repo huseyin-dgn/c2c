@@ -52,7 +52,8 @@ try {
       await page.screenshot({ path: `${output}/stage-${progress}.png` });
     }
     await page.getByRole('button', { name: 'Animasyonu Test Et', exact: true }).waitFor();
-    assert.equal(new Set(report.stages.map(stage => stage.camera)).size, 5);
+    assert.equal(new Set(report.stages.map(stage => stage.camera)).size, 4);
+    assert.equal(report.stages[0].camera,report.stages.at(-1).camera,'restored establishing shot');
     for (const progress of [75, 50, 25, 0]) {
       await page.evaluate(value => {
         const root = document.querySelector('.story');
@@ -62,7 +63,7 @@ try {
       await page.waitForTimeout(250);
       assert.equal(await page.locator('.story canvas').getAttribute('data-camera'), report.stages.find(stage => Math.abs(stage.progress - progress) < .15).camera);
     }
-    report.checks.push('real button: five distinct camera poses, pinned scene, reverse playback');
+    report.checks.push('real button: five test stages, dolly/cutaway/focus, restored wide shot, pin and reverse playback');
     await page.getByRole('button', { name: 'Animasyonu Test Et', exact: true }).click();
     await page.getByRole('button', { name: 'Testi Durdur', exact: true }).click();
     assert.match(await page.locator('.debug-message').innerText(), /durduruldu/);
@@ -98,7 +99,7 @@ try {
     await failed.screenshot({ path: `${output}/webgl-failed.png` });
     await failed.close();
     await failureBrowser.close();
-    report.checks.push('WebGL denied: real failure and startup error, visible SVG fallback');
+    report.checks.push('WebGL denied: real failure and startup error, visible real-scene poster fallback');
     await page.evaluate(() => dispatchEvent(new ErrorEvent('error', { message: 'QA diagnostic JavaScript error' })));
     await page.waitForFunction(() => document.querySelector('[data-debug="errors"]').textContent.includes('QA diagnostic JavaScript error'));
     report.checks.push('actual window error event displayed');

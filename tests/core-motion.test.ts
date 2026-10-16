@@ -4,12 +4,14 @@ import { coreMotion, coreKeyframes } from '../lib/core-motion';
 test('five scroll checkpoints follow the authored camera path', () => {
   for (let i = 0; i < 5; i++) assert.deepEqual(coreMotion(i / 4), coreKeyframes[i]);
 });
-test('middle stage is fully disassembled and processing, final stage has a closed chassis', () => {
+test('dolly precedes the cutaway and the final shot restores the mounted package', () => {
+  assert.equal(coreMotion(0.25).separation, 0);
   assert.equal(coreMotion(0.5).separation, 1);
   assert.equal(coreMotion(0.5).processing, 1);
   assert.equal(coreMotion(1).separation, 0);
   assert.equal(coreMotion(1).integration, 1);
-  assert.notEqual(coreMotion(0).rotation, coreMotion(1).rotation);
+  assert.equal(coreMotion(0).rotation, coreMotion(1).rotation);
+  assert.equal(coreMotion(0).cameraZ, coreMotion(1).cameraZ);
   assert.ok(coreMotion(0.75).cameraY < coreMotion(0).cameraY);
 });
 test('the entire camera and structure state reverses without history or elapsed time', () => {

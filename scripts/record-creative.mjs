@@ -12,7 +12,7 @@ const errors = [];
 page.on('pageerror', error => errors.push(error.message));
 try {
   await page.goto(base, { waitUntil: 'networkidle' });
-  await page.waitForSelector('canvas[data-model="industrial-modular-assembly"]');
+  await page.waitForSelector('canvas[data-model="motherboard-processor"]');
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(700);
   await page.evaluate(async () => {

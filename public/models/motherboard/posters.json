@@ -1,0 +1,23 @@
+[
+  {
+    "name": "mobile",
+    "width": 375,
+    "height": 389,
+    "camera": "9.74,8.40,14.00",
+    "bytes": 6186
+  },
+  {
+    "name": "tablet",
+    "width": 691,
+    "height": 522,
+    "camera": "9.74,8.40,14.00",
+    "bytes": 9500
+  },
+  {
+    "name": "desktop",
+    "width": 1168,
+    "height": 1107,
+    "camera": "8.70,8.40,12.50",
+    "bytes": 40846
+  }
+]

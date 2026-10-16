@@ -4,7 +4,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import globals from 'globals';
 export default tseslint.config(
-  { ignores: ['.next/**', 'node_modules/**', 'test-results/**', 'next-env.d.ts'] },
+  { ignores: ['.next/**', 'node_modules/**', 'test-results/**', 'artifacts/**', 'next-env.d.ts'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -16,7 +16,7 @@ export default tseslint.config(
   },
   { files: ['**/*.mjs'], languageOptions: { globals: globals.node } },
   {
-    files: ['scripts/visual-qa.mjs', 'scripts/diagnostics-qa.mjs', 'scripts/interactive-qa.mjs', 'scripts/bake-studio.mjs', 'scripts/scroll-recording.mjs', 'scripts/creative-qa.mjs', 'scripts/record-creative.mjs'],
+    files: ['scripts/visual-qa.mjs', 'scripts/diagnostics-qa.mjs', 'scripts/interactive-qa.mjs', 'scripts/bake-studio.mjs', 'scripts/scroll-recording.mjs', 'scripts/creative-qa.mjs', 'scripts/record-creative.mjs', 'scripts/processor-qa.mjs', 'scripts/record-processor.mjs', 'scripts/bake-hero-posters.mjs', 'scripts/hero-resources-qa.mjs'],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
   },
 );

@@ -1,0 +1,41 @@
+.processor-world {
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 98%, transparent),
+    linear-gradient(180deg, #000 72%, transparent 100%);
+  mask-composite: intersect;
+}
+.processor-poster {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.scene-shell:has(canvas[data-model="motherboard-processor"]) > .processor-poster {
+  visibility: hidden;
+  opacity: 0;
+}
+.processor-poster picture {
+  display: contents;
+}
+.processor-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.scene-shell .processor-world {
+  left: 18%;
+}
+@media (min-width: 1600px) {
+  .scene-shell .processor-world {
+    left: 26%;
+    mask-image: linear-gradient(90deg, transparent, #000 4%, #000 98%, transparent),
+      linear-gradient(180deg, #000 72%, transparent 100%);
+  }
+}
+@media (max-width: 1023px) {
+  .scene-shell .processor-world {
+    left: 0;
+  }
+  .processor-world {
+    mask-image: linear-gradient(90deg, transparent, #000 5%, #000 98%, transparent),
+      linear-gradient(180deg, #000 80%, transparent 100%);
+  }
+}
