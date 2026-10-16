@@ -2,7 +2,7 @@
 import { use, useEffect, useLayoutEffect, useRef, type RefObject } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { coreMotion } from '@/lib/core-motion';
+import { heroMotion } from '@/lib/hero-sequence';
 import MotherboardModel from './MotherboardModel';
 import { publishHeroProjection } from '@/lib/hero-projection';
 
@@ -54,7 +54,7 @@ export default function ProcessorModel({progress,mobile}:{progress:RefObject<{va
   },[geometry,maps]);
   useFrame(({camera,gl,scene,pointer})=>{
     if(!assembly.current||!layers.current)return;
-    const p=progress.current.value,m=coreMotion(p),scale=mobile?1.12:1;
+    const sequence=heroMotion(progress.current.value),p=sequence.assemblyProgress,m=sequence.pose,scale=mobile?1.12:1;
     const settle=(start:number,end:number)=>{const t=THREE.MathUtils.clamp((p-start)/(end-start),0,1);return 1-t*t*(3-2*t);};
     const bodyOpening=p>.75?.85*settle(.75,.91):m.separation;
     const lidOpening=p>.75?.85*settle(.85,1):m.separation;
@@ -82,6 +82,7 @@ export default function ProcessorModel({progress,mobile}:{progress:RefObject<{va
     });
     c.dataset.model='motherboard-processor';
     c.dataset.packageLift=String(packageGroup.current?.position.y||0);
+    c.dataset.assemblyProgress=String(p);c.dataset.pullback=String(sequence.pullback);
     // Development-only export of the actual rendered scene for mobile posters.
     if(process.env.NODE_ENV==='development'&&location.search.includes('capture=1'))queueMicrotask(()=>{c.dataset.poster=c.toDataURL('image/png');});
     scene.userData.progress=p;
@@ -91,6 +92,8 @@ export default function ProcessorModel({progress,mobile}:{progress:RefObject<{va
     <hemisphereLight args={['#f6f3e9','#12352a',.3]}/>
     <directionalLight position={[2,7,4]} intensity={1.9} color="#fff8ec" castShadow={!mobile} shadow-mapSize={[1024,1024]} shadow-camera-left={-5} shadow-camera-right={5} shadow-camera-top={5} shadow-camera-bottom={-5} shadow-normalBias={.015} shadow-bias={-.0001} shadow-radius={3}/>
     <directionalLight position={[-4,2,-4]} intensity={1.1} color="#dce4d9"/>
+    {/* Broad, shadow-free front fill recovers PCB/socket details without a new shadow pass. */}
+    <directionalLight position={[1,2.5,5]} intensity={.45} color="#e5e7dc"/>
     <group ref={assembly} scale={mobile?.84:1} position={mobile?[-.55,0,0]:[0,0,0]}>
       <MotherboardModel mobile={mobile}/>
       <group ref={packageGroup}>

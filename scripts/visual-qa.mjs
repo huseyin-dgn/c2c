@@ -48,10 +48,10 @@ async function seek(progress) {
     });
   }, progress);
   await page.waitForFunction(
-    (value) => Math.abs(Number(document.querySelector('.story')?.dataset.progress) - value) < 0.002,
+    (value) => Math.abs(Number(document.querySelector('.story')?.dataset.progress) - value) < 0.0003,
     progress,
   );
-  await page.waitForTimeout(180);
+  await page.waitForTimeout(350);
 }
 async function difference(a, b) {
   const first = await sharp(a).removeAlpha().raw().toBuffer();
@@ -109,7 +109,7 @@ try {
       images.push(await page.screenshot({ path: file }));
       result.stages.push(state);
     }
-    assert.equal(result.stages[2].separation, 1);
+    assert.ok(result.stages[2].separation>.9,'opened package remains visible at the middle of the extended sequence');
     assert.equal(result.stages[4].integration, 1);
     for (let i = 1; i < images.length; i++) {
       const delta = await difference(images[i - 1], images[i]);
@@ -124,9 +124,11 @@ try {
         integration: Number(canvas.dataset.integration),
       }));
       const forward = result.stages.find((stage) => Math.abs(stage.progress - progress) < 0.002);
-      assert.equal(state.camera, forward.camera);
-      assert.equal(state.separation, forward.separation);
-      assert.equal(state.integration, forward.integration);
+      // Scroll positions are integer CSS pixels; the diagnostic channels are
+      // rounded. A midpoint in the extended sequence need not be a keyframe.
+      state.camera.split(',').forEach((v,i)=>assert.ok(Math.abs(Number(v)-Number(forward.camera.split(',')[i]))<=.02,'reverse camera within diagnostic precision'));
+      assert.ok(Math.abs(state.separation-forward.separation)<=.002,'reverse separation within scroll quantization');
+      assert.ok(Math.abs(state.integration-forward.integration)<=.002,'reverse integration within scroll quantization');
       result.reverse.push({ progress, ...state });
     }
     const reverseImage = await page.screenshot({

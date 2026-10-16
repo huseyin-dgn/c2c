@@ -11,6 +11,7 @@ import SceneDebugPanel from './SceneDebugPanel';
 import { recordSceneError } from '@/lib/scene-diagnostics';
 import { requestScrollRefresh } from '@/lib/use-scroll-layout';
 import ProcessorPoster from './ProcessorPoster';
+import {heroTiming,heroAssemblyProgress} from '@/lib/hero-sequence';
 import './processor-world.css';
 const Scene = dynamic(() => import('./EngineeringScene'), {
   ssr: false,
@@ -90,7 +91,7 @@ export default function Story() {
             id: 'engineering-story',
             trigger: root.current,
             start: 'top top',
-            end: () => `+=${window.innerHeight * (window.innerWidth < 1024 ? 3.5 : 4)}`,
+            end: () => `+=${window.innerHeight * (window.innerWidth < 1024 ? 3.5 : 4) * heroTiming.total}`,
             pin: stage.current,
             pinSpacing: true,
             scrub: 0.65,
@@ -102,13 +103,14 @@ export default function Story() {
           motion.current,
           {
             value: 1,
-            duration: 1,
+            duration: heroTiming.total,
             onUpdate: () => {
               const p = motion.current.value;
               invalidateScene.current();
               root.current?.setAttribute('data-progress', p.toFixed(4));
               stage.current?.style.setProperty('--story-progress', String(p));
-              const next = p < 0.18 ? 0 : p < 0.42 ? 1 : p < 0.70 ? 2 : 3;
+              const assemblyProgress=heroAssemblyProgress(p);
+              const next = assemblyProgress < 0.18 ? 0 : assemblyProgress < 0.42 ? 1 : assemblyProgress < 0.70 ? 2 : 3;
               if (activeRef.current !== next) {
                 activeRef.current = next;
                 setActive(next);

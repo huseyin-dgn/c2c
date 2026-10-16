@@ -12,7 +12,7 @@ await page.evaluate(async()=>{
     const from=scrollY,start=performance.now();
     function frame(now){const p=Math.min(1,(now-start)/duration),t=p*p*(3-2*p);scrollTo({top:from+(to-from)*t,behavior:'instant'});if(p<1)requestAnimationFrame(frame);else resolve();}requestAnimationFrame(frame);
   });
-  const end=document.querySelector('.story').offsetTop+innerHeight*4;
+  const root=document.querySelector('.story'),end=root.getBoundingClientRect().top+scrollY+root.offsetHeight-innerHeight;
   await move(end,11000);await new Promise(r=>setTimeout(r,900));
   await move(end+innerHeight*.6,1200);await new Promise(r=>setTimeout(r,500));
   await move(0,8000);await new Promise(r=>setTimeout(r,900));

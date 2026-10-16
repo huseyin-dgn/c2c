@@ -16,7 +16,7 @@ export default tseslint.config(
   },
   { files: ['**/*.mjs'], languageOptions: { globals: globals.node } },
   {
-    files: ['scripts/visual-qa.mjs', 'scripts/diagnostics-qa.mjs', 'scripts/interactive-qa.mjs', 'scripts/bake-studio.mjs', 'scripts/bake-hero-studio.mjs', 'scripts/scroll-recording.mjs', 'scripts/creative-qa.mjs', 'scripts/record-creative.mjs', 'scripts/processor-qa.mjs', 'scripts/record-processor.mjs', 'scripts/bake-hero-posters.mjs', 'scripts/hero-resources-qa.mjs', 'scripts/hero-polish-qa.mjs', 'scripts/hero-polish-evidence.mjs'],
+    files: ['scripts/visual-qa.mjs', 'scripts/diagnostics-qa.mjs', 'scripts/interactive-qa.mjs', 'scripts/bake-studio.mjs', 'scripts/bake-hero-studio.mjs', 'scripts/scroll-recording.mjs', 'scripts/creative-qa.mjs', 'scripts/record-creative.mjs', 'scripts/processor-qa.mjs', 'scripts/record-processor.mjs', 'scripts/bake-hero-posters.mjs', 'scripts/hero-resources-qa.mjs', 'scripts/hero-finale-qa.mjs', 'scripts/hero-polish-qa.mjs', 'scripts/hero-polish-evidence.mjs'],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
   },
 );

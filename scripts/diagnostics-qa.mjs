@@ -53,7 +53,7 @@ try {
     }
     await page.getByRole('button', { name: 'Animasyonu Test Et', exact: true }).waitFor();
     assert.notEqual(report.stages[0].camera,report.stages[1].camera,'real approach');
-    assert.equal(report.stages[1].camera,report.stages.at(-1).camera,'near shot retained after closure');
+    assert.equal(report.stages[0].camera,report.stages.at(-1).camera,'wide shot restored after closure');
     for (const progress of [75, 50, 25, 0]) {
       await page.evaluate(value => {
         const root = document.querySelector('.story');
@@ -63,7 +63,7 @@ try {
       await page.waitForTimeout(250);
       assert.equal(await page.locator('.story canvas').getAttribute('data-camera'), report.stages.find(stage => Math.abs(stage.progress - progress) < .15).camera);
     }
-    report.checks.push('real button: five test stages, dolly/cutaway/focus, close-up closure, pin and reverse playback');
+    report.checks.push('real button: five test stages, dolly/cutaway/focus, seated final pullback, pin and reverse playback');
     await page.getByRole('button', { name: 'Animasyonu Test Et', exact: true }).click();
     await page.getByRole('button', { name: 'Testi Durdur', exact: true }).click();
     assert.match(await page.locator('.debug-message').innerText(), /durduruldu/);

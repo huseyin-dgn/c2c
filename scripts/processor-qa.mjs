@@ -9,6 +9,7 @@ await fs.mkdir(dir,{recursive:true});
 const browser=await chromium.launch({channel:'chrome',headless:true});
 const measurements=[];
 const sameLayers=(a,b)=>a.split(',').every((v,i)=>Math.abs(Number(v)-Number(b.split(',')[i]))<.0001);
+const sequenceDuration=1.15;
 try{
 for(const [width,height] of [[375,812],[768,1024],[1440,900],[1920,1080]]){
   const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
@@ -25,8 +26,8 @@ for(const [width,height] of [[375,812],[768,1024],[1440,900],[1920,1080]]){
   await page.locator('.story canvas[data-camera]').waitFor({timeout:60000});
   if(baseline)await page.locator('.motion-toggle').click();
   const stages=[];
-  for(const p of [0,.25,.5,.75,1,.75,.5,.25,0]){
-    await page.evaluate(p=>{const r=document.querySelector('.story');window.scrollTo(0,r.offsetTop+innerHeight*(innerWidth<1024?3.5:4)*p);},p);
+  for(const p of [0,.25/sequenceDuration,.5/sequenceDuration,.75/sequenceDuration,1,.75/sequenceDuration,.5/sequenceDuration,.25/sequenceDuration,0]){
+    await page.evaluate(p=>{const r=document.querySelector('.story');window.scrollTo(0,r.getBoundingClientRect().top+scrollY+(r.offsetHeight-innerHeight)*p);},p);
     await page.waitForTimeout(1100);
     const data=await page.locator('.story canvas').evaluate(c=>({...c.dataset}));
     stages.push({progress:p,...data});
@@ -46,10 +47,10 @@ for(const [width,height] of [[375,812],[768,1024],[1440,900],[1920,1080]]){
       let last=c.dataset.frames,stable=0;const start=performance.now();
       const timer=setInterval(()=>{const now=c.dataset.frames;stable=now===last?stable+1:0;last=now;if(stable>=5){clearInterval(timer);resolve();}else if(performance.now()-start>8000){clearInterval(timer);reject(new Error('WebGL keeps rendering while idle'));}},200);
     }));
-    await page.evaluate(()=>scrollTo(0,innerHeight*(innerWidth<1024?3.5:4)*.93));await page.waitForTimeout(1100);
+    await page.evaluate(p=>{const r=document.querySelector('.story');scrollTo(0,r.getBoundingClientRect().top+scrollY+(r.offsetHeight-innerHeight)*p);},.93/sequenceDuration);await page.waitForTimeout(1100);
     const closing=await page.locator('.story canvas').evaluate(c=>({layers:c.dataset.layers.split(',').map(Number),lift:Number(c.dataset.packageLift)}));
     assert.ok(closing.layers[0]>.1&&closing.layers.slice(2).every(v=>Math.abs(v)<.0001)&&closing.lift<.0001,'package seats before the lid closes');
-    await page.screenshot({path:`${dir}/${width}-reassembly-93.png`});
+    await page.screenshot({path:`${dir}/${width}-reassembly-before-lid.png`});
   }
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'no horizontal overflow');
   assert.deepEqual(errors,[]);
