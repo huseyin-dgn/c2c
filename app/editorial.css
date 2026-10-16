@@ -1,0 +1,87 @@
+/* Continuous editorial chapters. Diagrams are original explanatory drawings. */
+[data-motion-region] { overflow: clip; }
+.about-editorial, .development-section { background: var(--ivory); color: var(--ink); --muted: #53634e; }
+.about-editorial { overflow: clip; }
+.about-editorial .eyebrow, .development-intro .eyebrow { color: #53634e; }
+.about-editorial-heading h2 { font-size: clamp(40px, 5.15vw, 76px); font-weight: 400; letter-spacing: -3px; line-height: 1.12; margin: 30px 0 75px; }
+.about-editorial h2 em, .development-intro em { font-family: var(--serif); font-weight: 400; color: #687e69; }
+.about-editorial-body { display: grid; grid-template-columns: .8fr 1.2fr; gap: 10%; align-items: center; }
+.about-wordmark { font: 400 clamp(120px, 18vw, 255px)/.8 var(--serif); letter-spacing: -18px; color: #315448; }
+.about-wordmark > span { color: #9a8656; font-style: italic; }
+.about-wordmark svg { display: block; width: 100%; height: 65px; margin-top: 40px; color: #9a8656; }
+.about-lead { font-size: clamp(21px, 2.1vw, 30px); line-height: 1.5; letter-spacing: -.6px; max-width: 650px; margin: 0 0 38px; }
+.about-short-blocks { display: grid; grid-template-columns: 1fr 1fr; gap: 35px; margin-bottom: 35px; }
+.about-short-blocks h3 { font-size: 14px; font-weight: 500; margin: 0 0 13px; }
+.about-short-blocks p { font-size: 14px; line-height: 1.9; color: #53634e; margin: 0; }
+.about-editorial-copy .text-link { font-size: 12px; }
+.development-intro { padding-top: 105px; }
+.development-intro h2 { font-size: clamp(45px, 6.8vw, 96px); font-weight: 400; letter-spacing: -3.4px; margin: 28px 0; line-height: 1.07; }
+.development-intro > p { font-size: 16px; line-height: 1.8; max-width: 630px; margin-bottom: 35px; }
+.development-note { font-size: 12px; line-height: 1.9; color: #53634e; padding-bottom: 50px; }
+.capability-spread { overflow: clip; --diagram-fill: #e4e4d6; }
+.capability-vision { background: #ece9dd; }
+.capability-industrial { background: #0b3027; color: #f6f3e9; --diagram-fill: #123d31; --muted: #b4c0af; }
+.capability-software { background: #f6f3e9; }
+.capability-layout { display: grid; grid-template-columns: .95fr 1.05fr; gap: 8%; padding-block: 100px; align-items: start; }
+.capability-layout > * { min-width: 0; }
+.capability-illustration { position: sticky; top: 120px; padding-top: 50px; color: #315448; }
+.capability-illustration > p { font-size: 11px; line-height: 1.8; display: flex; justify-content: center; gap: 16px; text-align: center; margin-top: 5px; }
+.capability-illustration > p > span { color: #9a8656; }
+.system-diagram { display: block; width: 100%; height: auto; }
+.diagram-annotations { font: 9px Arial, sans-serif; letter-spacing: 1.1px; opacity: .6; }
+.capability-copy .eyebrow { font-size: 9px; color: var(--muted); letter-spacing: 1.5px; line-height: 1.8; }
+.capability-copy h3 { font-size: clamp(34px, 3.5vw, 54px); letter-spacing: -1.9px; font-weight: 400; line-height: 1.13; margin: 28px 0; }
+.capability-copy h3 > span { display: block; }
+.capability-copy h3 em { font-family: var(--serif); font-weight: 400; }
+.capability-lead { font-size: 15px; line-height: 1.9; color: var(--muted); max-width: 590px; }
+.capability-applications { list-style: none; margin: 35px 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 16px 25px; }
+.capability-applications li { font-size: 13px; line-height: 1.7; padding-left: 14px; position: relative; }
+.capability-applications li::before { content: ''; width: 4px; height: 4px; background: #9a8656; position: absolute; top: 9px; left: 0; }
+.capability-constraint { font-size: 12px; line-height: 1.9; color: var(--muted); max-width: 550px; margin: 0 0 32px; }
+.capability-copy .text-link { font-size: 12px; }
+.capability-industrial .capability-illustration { color: #b4c0af; order: 2; }
+.capability-industrial .capability-copy { order: 1; }
+.capability-industrial .capability-layout { grid-template-columns: 1.05fr .95fr; }
+.capability-software .system-diagram { padding-inline: 15px; }
+.about-statement { padding-top: 85px; }
+@media (min-width: 1024px) {
+  .usecases .cases-editorial { padding-block: 65px; }
+}
+@media (max-width: 1023px) {
+  .about-editorial-heading h2 { margin-bottom: 50px; letter-spacing: -2px; }
+  .about-editorial-body { grid-template-columns: .65fr 1.35fr; gap: 7%; }
+  .about-wordmark { font-size: 145px; letter-spacing: -12px; }
+  .about-short-blocks { grid-template-columns: 1fr; gap: 24px; }
+  .development-intro { padding-top: 75px; }
+  .development-intro h2 { letter-spacing: -2px; }
+  .capability-layout, .capability-industrial .capability-layout { grid-template-columns: 1fr; gap: 35px; padding-block: 65px; }
+  .capability-illustration { position: relative; top: auto; padding-top: 0; max-width: 630px; width: 100%; margin-inline: auto; }
+  .capability-industrial .capability-illustration { order: 0; }
+  .capability-copy { max-width: 680px; }
+  .capability-copy h3 { font-size: clamp(36px, 5vw, 48px); }
+  .capability-applications { gap: 15px 30px; }
+}
+@media (max-width: 600px) {
+  .about-editorial-heading h2 { font-size: 39px; letter-spacing: -1.7px; margin-top: 24px; margin-bottom: 35px; }
+  .about-editorial-body { grid-template-columns: 1fr; gap: 38px; }
+  .about-wordmark { font-size: 140px; letter-spacing: -10px; }
+  .about-wordmark svg { width: 80%; height: 35px; margin: 22px 0 0; }
+  .about-lead { font-size: 23px; margin-bottom: 30px; }
+  .about-short-blocks p { font-size: 13px; }
+  .development-intro { padding-top: 60px; }
+  .development-intro h2 { font-size: 46px; letter-spacing: -2px; }
+  .development-intro h2 em { display: block; }
+  .development-intro > p { font-size: 14px; }
+  .development-note { font-size: 11px; padding-bottom: 35px; }
+  .capability-layout, .capability-industrial .capability-layout { padding-block: 48px; gap: 24px; }
+  .capability-illustration > p { font-size: 10px; gap: 10px; }
+  .capability-copy h3 { font-size: 35px; letter-spacing: -1.35px; margin-top: 22px; }
+  .capability-copy .eyebrow { font-size: 8px; letter-spacing: 1px; }
+  .capability-lead { font-size: 14px; }
+  .capability-applications { grid-template-columns: 1fr; margin: 25px 0; gap: 13px; }
+  .capability-applications li { font-size: 13px; }
+  .capability-constraint { font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .capability-illustration { position: relative; top: auto; }
+}
