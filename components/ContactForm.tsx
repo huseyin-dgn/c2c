@@ -12,6 +12,14 @@ export default function ContactForm({
 }) {
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const [area,setArea] = useState(solutions.some(item=>item.slug===selectedArea)?selectedArea:'');
+  const guidance:Record<string,string> = {
+    'goruntu-isleme':'Mevcut kamera sisteminizle hangi olayları veya nesneleri tespit etmek istiyorsunuz? Kamera, ışık ve örnek görüntü koşullarını kısaca anlatın.',
+    'yapay-zeka':'Hangi veriye sahipsiniz ve bu veriden hangi tahmin veya karar desteğini üretmek istiyorsunuz?',
+    'otomasyon':'Hangi tekrarlanan işi veya hangi iki sistem arasındaki veri aktarımını otomatikleştirmek istiyorsunuz?',
+    'siber-guvenlik':'Hangi yazılım veya veri akışı için güvenlik ihtiyacınız var? Erişim sınırlarını ve beklediğiniz incelemeyi açıklayın.',
+    'ozel-yazilim':'Hazır araçların karşılamadığı hangi iş kuralı veya operasyon ihtiyacı için özel yazılım arıyorsunuz?',
+  };
   const startedAt = useRef(0);
   useEffect(() => {
     startedAt.current = Date.now();
@@ -71,6 +79,14 @@ export default function ContactForm({
           }
         }}
       >
+        <fieldset className="form-step"><legend>01 · Çözüm alanı</legend>
+          <label htmlFor="area">Hangi alanda destek arıyorsunuz?<select id="area" name="area" value={area} onChange={event=>setArea(event.target.value)}><option value="">Diğer / Emin Değilim</option>{solutions.map(solution=><option key={solution.slug} value={solution.slug}>{solution.name}</option>)}</select></label>
+        </fieldset>
+        <fieldset className="form-step"><legend>02 · Problem ve hedef</legend>
+          <p id="problem-guidance" className="problem-guidance" aria-live="polite">{guidance[area]??'Bugün sizi neyin zorladığını ve hangi sonucu elde etmek istediğinizi kısaca anlatın. Çözüm alanını birlikte belirleyebiliriz.'}</p>
+          <label htmlFor="message">Projeniz veya probleminiz <span>*</span><textarea id="message" name="message" required minLength={20} maxLength={5000} rows={5} aria-describedby="problem-guidance message-limit" placeholder="Mevcut durum, çözmek istediğiniz problem ve hedeflediğiniz sonuç…" /></label><p id="message-limit" className="experience-note">20–5000 karakter. Kısa bir problem özeti yeterli.</p>
+        </fieldset>
+        <fieldset className="form-step"><legend>03 · İletişim bilgileri</legend>
         <div className="form-row">
           <label htmlFor="name">
             Ad Soyad <span>*</span>
@@ -122,33 +138,7 @@ export default function ContactForm({
             />
           </label>
         </div>
-        <label htmlFor="area">
-          Çözüm alanı <small>İsteğe bağlı</small>
-          <select
-            id="area"
-            name="area"
-            defaultValue={solutions.some((x) => x.slug === selectedArea) ? selectedArea : ''}
-          >
-            <option value="">Birlikte belirleyelim</option>
-            {solutions.map((solution) => (
-              <option key={solution.slug} value={solution.slug}>
-                {solution.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label htmlFor="message">
-          Projeniz veya probleminiz <span>*</span>
-          <textarea
-            id="message"
-            name="message"
-            required
-            minLength={20}
-            maxLength={5000}
-            rows={6}
-            placeholder="Çözmek istediğiniz problemi, mevcut sisteminizi ve hedeflediğiniz sonucu kısaca anlatın…"
-          />
-        </label>
+        </fieldset>
         <div className="honeypot" aria-hidden="true">
           <label htmlFor="website">
             Web sitesi

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
 const base = process.env.TEST_BASE_URL || 'http://localhost:3000';
-const output = 'artifacts/creative/motion';
+const output = process.env.TEST_ARTIFACT_DIR || 'artifacts/interactive/editorial';
 await fs.mkdir(output, { recursive: true });
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
 const page = await browser.newPage({ reducedMotion: 'no-preference' });
@@ -16,7 +16,7 @@ try {
     await page.goto(base, { waitUntil: 'networkidle' });
     await page.waitForSelector('canvas[data-model="industrial-modular-assembly"]');
     const sections = await page.locator('[data-motion-region]').evaluateAll(elements => elements.map(element => element.dataset.motionRegion));
-    assert.equal(sections.length, 6);
+    assert.deepEqual(sections, ['about']);
     assert.equal(await page.locator('.project-card').count(), 0, 'no portfolio grid on homepage');
     const result = { width, regions: [] };
     for (const key of sections) {
@@ -71,13 +71,13 @@ try {
   await page.waitForFunction(() => [...document.querySelectorAll('[data-motion-region]')].every(region => region.dataset.motionState === 'reduced'));
   assert.equal(await page.locator('canvas,.pin-spacer').count(), 0);
   assert.equal(await page.locator('[data-motion="copy"]').evaluateAll(elements => elements.filter(element => getComputedStyle(element).visibility === 'hidden' || Number(getComputedStyle(element).opacity) < 1).length), 0);
-  await page.locator('.capability-vision').screenshot({ path: `${output}/reduced-motion.png`, style: '.skip-link:not(:focus){visibility:hidden!important}' });
+  await page.locator('.about-editorial').screenshot({ path: `${output}/reduced-motion.png`, style: '.skip-link:not(:focus){visibility:hidden!important}' });
   report.checks.push('runtime reduced-motion change: all copy visible, all motion reverted, no canvas/pin');
   const nojs = await browser.newPage({ javaScriptEnabled: false, viewport: { width: 375, height: 812 } });
   await nojs.goto(base);
   assert.equal(await nojs.locator('.core-fallback').count(), 1);
-  assert.equal(await nojs.locator('.capability-spread').count(), 3);
-  assert.ok(await nojs.getByText('Alan ihlali ve yetkisiz giriş', { exact: true }).isVisible());
+  assert.equal(await nojs.locator('.solution-film').count(), 5);
+  assert.ok(await nojs.locator('.solution-film h3').first().isVisible());
   assert.equal(await nojs.locator('.about-editorial').evaluate(element => getComputedStyle(element).visibility), 'visible');
   await nojs.close();
   report.checks.push('JavaScript disabled: engineering fallback and server-rendered solution content visible');

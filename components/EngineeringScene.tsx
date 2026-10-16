@@ -1,72 +1,64 @@
 'use client';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { use, useCallback, useEffect, useMemo, useRef, useState, type RefObject, type ReactNode } from 'react';
 import * as THREE from 'three';
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { coreMotion } from '@/lib/core-motion';
 import { useMediaQuery } from '@/lib/use-media-query';
 import CoreFallback from './CoreFallback';
 import { recordSceneError } from '@/lib/scene-diagnostics';
+import studioManifest from '@/public/models/studio-env.json';
 type Props = {
   progress: RefObject<{ value: number }>;
   paused: boolean;
   onReady: (invalidate: () => void) => void;
   onFail: () => void;
 };
-function Studio() {
-  const { gl, scene } = useThree();
+let studioUsers=0;
+const plateAsset=fetch('/models/core-plate.json').then(response=>{if(!response.ok)throw new Error('Core geometry unavailable');return response.json();}).then(data=>new THREE.BufferGeometryLoader().parse(data));
+const studioEnvironment=fetch('/models/studio-env.bin.gz').then(async response=>{
+  if(!response.ok||!response.body)throw new Error('Stüdyo yansıması yüklenemedi.');
+  const bytes=await new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+  if(bytes.byteLength!==studioManifest.bytes)throw new Error('Stüdyo yansıma verisi eksik.');
+  const texture=new THREE.DataTexture(new Uint16Array(bytes),studioManifest.width,studioManifest.height,THREE.RGBAFormat,THREE.HalfFloatType);
+  texture.mapping=THREE.CubeUVReflectionMapping;
+  texture.minFilter=THREE.LinearFilter;texture.magFilter=THREE.LinearFilter;
+  texture.needsUpdate=true;
+  return texture;
+});
+export function StudioReady({children}:{children:ReactNode}) {use(studioEnvironment);return children;}
+export function Studio() {
+  const { scene,invalidate } = useThree();
+  const texture=use(studioEnvironment);
   useEffect(() => {
-    const generator = new THREE.PMREMGenerator(gl),
-      room = new RoomEnvironment();
-    const environment = generator.fromScene(room, 0.04);
+    studioUsers++;
+    // Re-upload this imperative Three texture after its last GPU owner disposed it.
+    // eslint-disable-next-line react-hooks/immutability
+    texture.needsUpdate=true;
     const previous = scene.environment;
     // R3F exposes an imperative Three.js scene, not immutable React state.
     // eslint-disable-next-line react-hooks/immutability
-    scene.environment = environment.texture;
+    scene.environment = texture;
+    invalidate();
     return () => {
       scene.environment = previous;
-      environment.dispose();
-      room.dispose();
-      generator.dispose();
+      if(--studioUsers===0)texture.dispose();
     };
-  }, [gl, scene]);
+  }, [scene,texture,invalidate]);
   return null;
 }
-function makePlate() {
-  const shape = new THREE.Shape(),
-    w = 1.45,
-    h = 1.13,
-    r = 0.09;
-  shape.moveTo(-w + r, -h);
-  shape.lineTo(w - r, -h);
-  shape.quadraticCurveTo(w, -h, w, -h + r);
-  shape.lineTo(w, h - r);
-  shape.quadraticCurveTo(w, h, w - r, h);
-  shape.lineTo(-w + r, h);
-  shape.quadraticCurveTo(-w, h, -w, h - r);
-  shape.lineTo(-w, -h + r);
-  shape.quadraticCurveTo(-w, -h, -w + r, -h);
-  const hole = new THREE.Path();
-  hole.absarc(0, 0, 0.26, 0, Math.PI * 2, true);
-  shape.holes.push(hole);
-  for (const x of [-1.23, 1.23]) for (const z of [-0.9, 0.9]) {
-    const mountingHole = new THREE.Path();
-    mountingHole.absarc(x, z, 0.075, 0, Math.PI * 2, true);
-    shape.holes.push(mountingHole);
-  }
-  const geometry = new THREE.ExtrudeGeometry(shape, {
-    depth: 0.13,
-    bevelEnabled: true,
-    bevelSegments: 2,
-    steps: 1,
-    bevelSize: 0.045,
-    bevelThickness: 0.035,
-    curveSegments: 18,
-  });
-  geometry.center();
-  geometry.rotateX(-Math.PI / 2);
-  return geometry;
+export function RendererWarmup({onReady,onError}:{onReady:()=>void;onError:()=>void}) {
+  const {gl,scene,camera}=useThree();
+  useEffect(()=>{
+    let disposed=false;
+    // Yield to paint, then let KHR_parallel_shader_compile prepare the programs.
+    const timer=setTimeout(()=>{
+      void gl.compileAsync(scene,camera).then(()=>{if(!disposed)onReady();}).catch(error=>{if(!disposed){recordSceneError(error);onError();}});
+    },0);
+    return()=>{disposed=true;clearTimeout(timer);};
+  },[gl,scene,camera,onReady,onError]);
+  return null;
 }
+
 function Core({
   progress,
   paused,
@@ -84,8 +76,8 @@ function Core({
     packets = useRef<THREE.Points>(null),
     clock = useRef(0),
     frames = useRef(0);
+  const plate=use(plateAsset);
   const geometry = useMemo(() => {
-    const plate = makePlate();
     const connections = new THREE.BufferGeometry();
     connections.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6 * 4 * 6), 3));
     const particles = new THREE.BufferGeometry();
@@ -104,7 +96,7 @@ function Core({
     const label = new THREE.CanvasTexture(labelCanvas);
     label.colorSpace = THREE.SRGBColorSpace;
     return { plate, connections, particles, label };
-  }, []);
+  }, [plate]);
   useEffect(
     () => () => {
       geometry.plate.dispose();
@@ -295,6 +287,9 @@ export default function EngineeringScene({ progress, paused, onReady, onFail }: 
     host = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(true),
     [lost, setLost] = useState(false);
+  const [prepared,setPrepared]=useState(false);
+  const compiled=useCallback(()=>setPrepared(true),[]);
+  const failed=useCallback(()=>setLost(true),[]);
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) =>
       setVisible(entry.isIntersecting && !document.hidden),
@@ -317,7 +312,7 @@ export default function EngineeringScene({ progress, paused, onReady, onFail }: 
       <Canvas
         camera={{ position: [5.8, 3.8, 7.5], fov: 39 }}
         dpr={[1, mobile ? 1 : 1.5]}
-        frameloop={visible ? 'demand' : 'never'}
+        frameloop={visible && prepared ? 'demand' : 'never'}
         gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
         fallback={<CoreFallback />}
         onPointerMove={() => invalidateScene.current()}
@@ -336,7 +331,8 @@ export default function EngineeringScene({ progress, paused, onReady, onFail }: 
           );
         }}
       >
-        <Core progress={progress} paused={paused} mobile={mobile} />
+        <StudioReady><Core progress={progress} paused={paused} mobile={mobile} />
+        <RendererWarmup onReady={compiled} onError={failed} /></StudioReady>
       </Canvas>
     </div>
   );

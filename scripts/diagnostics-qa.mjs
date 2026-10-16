@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 
 const base = process.env.TEST_BASE_URL || 'http://localhost:3000';
 const production = process.env.TEST_PRODUCTION === '1';
-const output = process.env.TEST_ARTIFACT_DIR || (production ? 'artifacts/final/production' : 'artifacts/final/diagnostics');
+const output = process.env.TEST_ARTIFACT_DIR || (production ? 'artifacts/interactive/production-debug' : 'artifacts/interactive/diagnostics');
 await fs.mkdir(output, { recursive: true });
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
 const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'no-preference' });
@@ -31,7 +31,7 @@ try {
     await page.waitForFunction(() => document.querySelector('[data-debug="webgl"]')?.textContent === 'Active');
     assert.match(await page.locator('[data-debug="canvas"]').innerText(), /Mounted/);
     assert.match(await page.locator('[data-debug="trigger"]').innerText(), /^Active/);
-    assert.equal(await page.locator('.pin-spacer').count(), 1);
+    assert.equal(await page.locator('.pin-spacer:has(> .story-stage)').count(), 1);
     report.renderer = await page.locator('[data-debug="renderer"]').innerText();
     assert.notEqual(report.renderer, 'Erişilemiyor');
     await page.getByRole('button', { name: 'Animasyonu Test Et', exact: true }).click();
@@ -42,9 +42,9 @@ try {
         progress: Number(document.querySelector('.story').dataset.progress) * 100,
         panel: document.querySelector('[data-debug="progress"]').textContent,
         chapter: document.querySelector('[data-debug="chapter"]').textContent,
-        camera: document.querySelector('canvas').dataset.camera,
-        separation: document.querySelector('canvas').dataset.separation,
-        integration: document.querySelector('canvas').dataset.integration,
+        camera: document.querySelector('.story canvas').dataset.camera,
+        separation: document.querySelector('.story canvas').dataset.separation,
+        integration: document.querySelector('.story canvas').dataset.integration,
         top: document.querySelector('.story-stage').getBoundingClientRect().top,
       }));
       assert.ok(Math.abs(state.top) < 2);
@@ -60,7 +60,7 @@ try {
       }, progress);
       await page.waitForFunction(value => Math.abs(Number(document.querySelector('.story').dataset.progress) * 100 - value) < 0.15, progress);
       await page.waitForTimeout(250);
-      assert.equal(await page.locator('canvas').getAttribute('data-camera'), report.stages.find(stage => Math.abs(stage.progress - progress) < .15).camera);
+      assert.equal(await page.locator('.story canvas').getAttribute('data-camera'), report.stages.find(stage => Math.abs(stage.progress - progress) < .15).camera);
     }
     report.checks.push('real button: five distinct camera poses, pinned scene, reverse playback');
     await page.getByRole('button', { name: 'Animasyonu Test Et', exact: true }).click();
@@ -102,7 +102,7 @@ try {
     await page.evaluate(() => dispatchEvent(new ErrorEvent('error', { message: 'QA diagnostic JavaScript error' })));
     await page.waitForFunction(() => document.querySelector('[data-debug="errors"]').textContent.includes('QA diagnostic JavaScript error'));
     report.checks.push('actual window error event displayed');
-    await page.evaluate(() => document.querySelector('canvas').getContext('webgl2').getExtension('WEBGL_lose_context').loseContext());
+    await page.evaluate(() => document.querySelector('.story canvas').getContext('webgl2').getExtension('WEBGL_lose_context').loseContext());
     await page.waitForFunction(() => document.querySelector('[data-debug="webgl"]').textContent === 'Failed');
     assert.match(await page.locator('[data-debug="errors"]').innerText(), /context kaybedildi/);
     report.checks.push('context loss: actual event captured and fallback displayed');

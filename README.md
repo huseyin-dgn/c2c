@@ -2,6 +2,8 @@
 
 Türkçe, çok sayfalı B2B mühendislik sitesi. Zümrüt yeşili / ivory editoryal tasarım; App Router, React Server Components, strict TypeScript, Tailwind CSS 4 ve gerçek, sabitlenmiş Three.js / GSAP scrollytelling deneyimi.
 
+Güncel interaktif sürümün uygulama ayrıntıları, kabul matrisi ve ölçümleri [INTERACTIVE_EXPERIENCE_REPORT.md](INTERACTIVE_EXPERIENCE_REPORT.md) içindedir. Başlangıç sürümünün güvenli Git geri dönüş noktası: `cce4bbf`. Önceki `artifacts/creative` ve `VALIDATION.md` kayıtları geçmiş sürümün kanıtlarıdır.
+
 ## Çalıştırma
 
 Node.js 22 LTS önerilir (en az 20.9).
@@ -29,7 +31,7 @@ npm start
 
 | Yol                | İçerik                                                                                            |
 | ------------------ | ------------------------------------------------------------------------------------------------- |
-| `/`                | Mekanik 3D hikâye, bizi tanıyın, üç çözüm alanı, senaryolar, süreç, teknik yaklaşım, ekip ve CTA |
+| `/`                | Cinematic Hero, bizi tanıyın, 7 parçalı donanım keşfi, 4 kamera senaryosu, 5 çözüm vitrini, problem anlatımı, süreç ve CTA |
 | `/cozumler`        | Beş çözüm alanı ve örnek uygulamalar                                                              |
 | `/projeler`        | Neler geliştiriyoruz? Kamera analizi, endüstriyel kontrol, özel yazılım ve otomasyon              |
 | `/projeler/[slug]` | Mevcut MotionFighter, Hyso ve CO₂ Emission teknik çalışma detayları; rotalar korunur              |
@@ -57,13 +59,15 @@ npm start
 
 GSAP Timeline ve ScrollTrigger `pin`, `pinSpacing` ve `scrub: 0.65` kullanarak tek bir sahneyi dört anlatı boyunca sabitler. Beş anahtar konum arasında kamera ve dönüş Hermite eğrisiyle sürekli hızda ilerler; mekanik ayrışma ve birleşme sınırlandırılmış easing kullanır. Model; kılavuz rayları, montaj delikleri, altıgen bağlantılar, işlem modülleri, soğutucu kanatlar, portlar ve havalandırmalı şasiden oluşur. İleri / geri kaydırma aynı yapısal ve kamera durumunu üretir. Yalnızca bağlantılardaki veri akışı zamana bağlıdır ve ayrı düğmeyle duraklatılabilir.
 
-`MotionSection.tsx` altı editorial alanın scroll zaman çizelgelerini yönetir: tipografik maske, görsel wipe, diyagram montajı ve SVG hat çizimi. İçerik sunucuda görünür gelir. Reduced-motion veya JavaScript kapalıyken metinler ve diyagramlar erişilebilir kalır. GSAP matchMedia cleanup sayfa geçişlerinde animasyonları temizler.
+`MotionSection.tsx` hakkımızda alanının ve alt sayfalardaki editorial alanların scroll zaman çizelgelerini yönetir. `SolutionsShowcase` masaüstünde yatay GSAP vitrini, `ProblemStory` tek görselde beş aşamalı süreç sunar. Mobilde ve reduced-motion tercihinde pin kullanılmaz; dikey / elle seçilebilir alternatifler sunulur. `SystemDiagram` çizim tamamlandıktan sonra görünürken sinyal akışı, tarama ve işlem vurguları üretir. İçerik sunucuda görünür gelir; GSAP cleanup sayfa geçişlerinde animasyonları temizler.
+
+Stüdyo yansıması ve özgün Hero plaka geometrisi `public/models/` içinde önceden hesaplanmıştır; shader programları `compileAsync` ile hazırlanır. Yeniden üretmek için `node scripts/bake-studio.mjs` ve `node scripts/bake-core-geometry.mjs` çalıştırılabilir. Inter fontlarının Latin / Latin Extended alt kümeleri aynı lisansla yerel olarak ön yüklenir. Lisanslar varlık klasörlerindedir.
 
 Sahne ayrı chunk olarak yüklenir; alt sayfalar 3D bağımlılıklarını yüklemez. Yerel Inter ve sistem serif fontları üçüncü taraf font isteği gerektirmez. Yedi delikli, pah kırılmış metal katman, devre ayrıntıları ve kapanan dış paneller özgün geometrilerle üretilir. RoomEnvironment / PMREM kontrollü stüdyo yansımalarını sağlar. Geometriler paylaşılır; environment, doku ve buffer kaynakları temizlenir. Mobil/tablette daha az küçük bileşen ve düşük DPR kullanılır. Canvas demand rendering kullanır: kaydırma değişince veya işleme akışı sürerken kare üretir; görünmeyince durur. Azaltılmış harekette canvas ve pin kaldırılır, tüm anlatı normal belge akışında sunulur. WebGL hatası ve context kaybında SVG alternatif gösterilir.
 
 ## Görsel doğrulama
 
-`artifacts/creative/index.html` güncel mekanik modeli, dört genişlikte yeni bölüm görüntülerini ve 29,52 saniyelik gerçek scroll kaydını içerir. `artifacts/creative/visual/` hero aşamalarını; `artifacts/creative/motion/` 24 bölüm kontrolü ve 72 ilerleme örneğini içerir. Önceki galeriler `artifacts/final/` ve `artifacts/redesign/` içinde saklıdır.
+`artifacts/interactive/index.html` güncel deneyimin ekran görüntülerini, gerçek tarayıcı videosunu ve Lighthouse bağlantılarını içerir. `artifacts/interactive/production/` yeni etkileşimleri; `artifacts/interactive/hero/` Hero ve rota regresyonunu kaydeder. Önceki galeriler de ilgili `creative`, `final` ve `redesign` klasörlerinde durur.
 
 ```sh
 # Ayrı terminalde npm run dev ile localhost:3000 açık olmalı.
@@ -71,12 +75,13 @@ Sahne ayrı chunk olarak yüklenir; alt sayfalar 3D bağımlılıklarını yükl
 npm run test:diagnostics
 npm run test:visual
 npm run test:creative
+npm run test:interactive
 node scripts/design-audit.mjs
 npm run record:scroll
-node scripts/create-creative-gallery.mjs
+node scripts/create-interactive-gallery.mjs
 ```
 
-Tarayıcı testleri farklı adreste çalıştırılacaksa `TEST_BASE_URL` kullanılır. `scripts/visual-qa.mjs`; gerçek canvas/kamera verisini, piksel farkını, ters kaydırmayı, taşmayı, klavye ve menüyü, navigasyon cleanup'ını, reduced-motion ve WebGL hata yolunu doğrular. `artifacts/lighthouse/` ölçüm raporlarını içerir. Fiziksel mobil FPS, bu masaüstü testlerinden çıkarılamaz.
+Tarayıcı testleri farklı adreste çalıştırılacaksa `TEST_BASE_URL` kullanılır. `scripts/visual-qa.mjs`; gerçek canvas/kamera verisini, piksel farkını, ters kaydırmayı, taşmayı, klavye ve menüyü, navigasyon cleanup'ını, reduced-motion ve WebGL hata yolunu doğrular. Güncel ölçümler `artifacts/interactive/lighthouse/` içindedir. Fiziksel mobil FPS, bu masaüstü testlerinden çıkarılamaz.
 
 ## İletişim entegrasyonu
 

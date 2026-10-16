@@ -8,13 +8,13 @@ export function Brand() {
     <Link
       href="/"
       className="brand"
-      aria-label="c2c. Mühendislik Engineering & Technology — ana sayfa"
+      aria-label="c2c. MÜHENDİSLİK ENGINEERING & TECHNOLOGY — ana sayfa"
     >
       <span className="brand-mark" aria-hidden="true">
         c<span>2</span>c<span className="brand-dot">.</span>
-      </span>
+      </span>{' '}
       <span className="brand-name" aria-hidden="true">
-        MÜHENDİSLİK<span>ENGINEERING & TECHNOLOGY</span>
+        MÜHENDİSLİK{' '}<span>ENGINEERING & TECHNOLOGY</span>
       </span>
     </Link>
   );

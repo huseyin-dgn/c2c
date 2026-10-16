@@ -27,16 +27,19 @@ for (const route of routes) {
   documents.set(route, html);
 }
 const broken = [];
+const fontAssets=new Set();
 for (const [route, html] of documents) {
   for (const match of html.matchAll(/href="(\/[^"?#]*)(?:\?[^"#]*)?(#[^"]*)?"/g)) {
     const [path, fragment] = [match[1], match[2]?.slice(1)];
     if (path.startsWith('/_next/') || path === '/icon.svg') continue;
+    if (path.startsWith('/fonts/')) {fontAssets.add(path);continue;}
     if (!routes.includes(path)) broken.push(`${route} → ${path}`);
     if (fragment && !documents.get(path)?.includes(`id="${fragment}"`))
       broken.push(`${route} → ${path}#${fragment}`);
   }
 }
 assert.deepEqual(broken, [], 'internal links and fragment targets');
+for(const asset of fontAssets){const response=await fetch(new URL(asset,base));assert.equal(response.status,200,asset);assert.match(response.headers.get('content-type')||'',/font\/woff2/,asset);}
 assert.match(documents.get('/'), /Karmaşık/);
 assert.match(documents.get('/'), /core-fallback/);
 assert.ok(

@@ -5,7 +5,7 @@ import path from 'node:path';
 import sharp from 'sharp';
 
 const base = process.env.TEST_BASE_URL || 'http://localhost:3000';
-const output = path.resolve(process.env.TEST_ARTIFACT_DIR || 'artifacts/final/visual');
+const output = path.resolve(process.env.TEST_ARTIFACT_DIR || 'artifacts/interactive/hero');
 await fs.mkdir(output, { recursive: true });
 const browser = await chromium.launch({
   headless: true,
@@ -84,7 +84,7 @@ try {
     for (const progress of [0, 0.25, 0.5, 0.75, 1]) {
       await seek(progress);
       const state = await page.evaluate(() => {
-        const canvas = document.querySelector('canvas');
+        const canvas = document.querySelector('.story canvas');
         return {
           progress: Number(document.querySelector('.story').dataset.progress),
           renderer: document.querySelector('.story').dataset.renderer,
@@ -117,7 +117,7 @@ try {
     }
     for (const progress of [0.75, 0.5, 0.25, 0]) {
       await seek(progress);
-      const state = await page.locator('canvas').evaluate((canvas) => ({
+      const state = await page.locator('.story canvas').evaluate((canvas) => ({
         camera: canvas.dataset.camera,
         separation: Number(canvas.dataset.separation),
         integration: Number(canvas.dataset.integration),
@@ -200,7 +200,7 @@ try {
   await seek(0.5);
   report.performance = await page.evaluate(async () => {
     const intervals = [];
-    const canvas = document.querySelector('canvas');
+    const canvas = document.querySelector('.story canvas');
     const firstRenderedFrame = Number(canvas.dataset.frames);
     let last = performance.now();
     await new Promise((resolve) => {
@@ -213,7 +213,7 @@ try {
       }
       requestAnimationFrame(frame);
     });
-    const gl = document.querySelector('canvas').getContext('webgl2'),
+    const gl = document.querySelector('.story canvas').getContext('webgl2'),
       debug = gl?.getExtension('WEBGL_debug_renderer_info');
     return {
       sampleMilliseconds: 3000,
@@ -225,16 +225,16 @@ try {
     };
   });
   await page.getByRole('button', { name: 'Veri akışını duraklat' }).click();
-  const camera = await page.locator('canvas').getAttribute('data-camera');
+  const camera = await page.locator('.story canvas').getAttribute('data-camera');
   await page.waitForTimeout(600);
-  assert.equal(await page.locator('canvas').getAttribute('data-camera'), camera);
+  assert.equal(await page.locator('.story canvas').getAttribute('data-camera'), camera);
   report.interactions.push('scroll pose stays fixed while idle');
   await page.getByRole('link', { name: 'Projenizi Anlatın', exact: true }).first().click();
   await page.waitForURL('**/iletisim');
   assert.equal(await page.locator('.pin-spacer').count(), 0);
   await page.goBack();
   await ready();
-  assert.equal(await page.locator('.pin-spacer').count(), 1);
+  assert.equal(await page.locator('.pin-spacer:has(> .story-stage)').count(), 1);
   report.interactions.push('navigation cleanup and return: exactly one pin');
   const reducedPage = await browser.newPage({
     viewport: { width: 375, height: 812 },

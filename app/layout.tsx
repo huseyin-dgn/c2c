@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
-import '@fontsource-variable/inter';
+import './fonts.css';
 import './globals.css';
 import './editorial.css';
+import './interactive.css';
 import SiteHeader from '@/components/SiteHeader';
 import SiteFooter from '@/components/SiteFooter';
 import { siteUrl } from '@/lib/site';
@@ -36,6 +37,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   };
   return (
     <html lang="tr">
+      <head>
+        <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/inter-latin-ext.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+      </head>
       <body>
       {process.env.NODE_ENV === 'development' && (
           <Script id="c2c-debug-errors" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: `

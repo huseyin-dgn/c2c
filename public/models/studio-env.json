@@ -1,0 +1,8 @@
+{
+  "width": 336,
+  "height": 256,
+  "format": "RGBA HalfFloat CubeUV",
+  "bytes": 688128,
+  "compressedBytes": 91941,
+  "source": "Three.js RoomEnvironment / PMREMGenerator, sigma 0.04"
+}

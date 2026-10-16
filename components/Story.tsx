@@ -9,6 +9,7 @@ import CoreFallback from './CoreFallback';
 import { useMediaQuery } from '@/lib/use-media-query';
 import SceneDebugPanel from './SceneDebugPanel';
 import { recordSceneError } from '@/lib/scene-diagnostics';
+import { requestScrollRefresh } from '@/lib/use-scroll-layout';
 const Scene = dynamic(() => import('./EngineeringScene'), {
   ssr: false,
   loading: () => <CoreFallback />,
@@ -117,8 +118,7 @@ export default function Story() {
         }
         timeline.fromTo('.scene-caption', { opacity: 0.5 }, { opacity: 1, duration: 0.2 }, 0.75);
         timeline.fromTo('.story-atmosphere', { opacity: 0.6 }, { opacity: 1, duration: 0.5 }, 0.12);
-        const refresh = () => ScrollTrigger.refresh();
-        document.fonts.ready.then(refresh);
+        document.fonts.ready.then(requestScrollRefresh);
       }, root);
       return () => ctx.revert();
     });
@@ -235,7 +235,7 @@ export default function Story() {
               onClick={() => setPaused(!paused)}
             >
               {paused ? <Play size={13} /> : <Pause size={13} />}
-              <span>{paused ? 'Akışı sürdür' : 'Akışı duraklat'}</span>
+              <span>{paused ? 'Veri akışını sürdür' : 'Veri akışını duraklat'}</span>
             </button>
           )}
         </div>

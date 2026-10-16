@@ -16,7 +16,7 @@ export default tseslint.config(
   },
   { files: ['**/*.mjs'], languageOptions: { globals: globals.node } },
   {
-    files: ['scripts/visual-qa.mjs', 'scripts/diagnostics-qa.mjs', 'scripts/scroll-recording.mjs', 'scripts/creative-qa.mjs', 'scripts/record-creative.mjs'],
+    files: ['scripts/visual-qa.mjs', 'scripts/diagnostics-qa.mjs', 'scripts/interactive-qa.mjs', 'scripts/bake-studio.mjs', 'scripts/scroll-recording.mjs', 'scripts/creative-qa.mjs', 'scripts/record-creative.mjs'],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
   },
 );

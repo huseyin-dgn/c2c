@@ -1,5 +1,4 @@
 import PageIntro from '@/components/PageIntro';
-import TeamSection from '@/components/TeamSection';
 import ContactSection from '@/components/ContactSection';
 import AboutSection from '@/components/AboutSection';
 import { pageMetadata } from '@/lib/site';
@@ -41,7 +40,6 @@ export default function AboutPage() {
           </p>
         </div>
       </section>
-      <TeamSection />
       <ContactSection />
     </>
   );

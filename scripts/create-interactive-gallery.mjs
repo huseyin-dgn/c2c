@@ -1,0 +1,13 @@
+import fs from 'node:fs/promises';
+const root='artifacts/interactive';
+const files=(await fs.readdir(`${root}/production`)).filter(file=>file.endsWith('.png')&&file!=='failure.png');
+const report=JSON.parse(await fs.readFile(`${root}/production/browser-report.json`,'utf8'));
+const lighthouse={};
+for(const profile of ['desktop','mobile']){
+  const result=JSON.parse(await fs.readFile(`${root}/lighthouse/${profile}-verified.report.json`,'utf8'));
+  lighthouse[profile]=Object.fromEntries(Object.entries(result.categories).map(([key,value])=>[key,Math.round(value.score*100)]));
+}
+const escape=value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');
+const figures=files.map(file=>`<figure><a href="production/${escape(file)}"><img loading="lazy" src="production/${escape(file)}" alt="${escape(file.replace('.png',''))}"></a><figcaption>${escape(file)}</figcaption></figure>`).join('');
+await fs.writeFile(`${root}/index.html`,`<!doctype html><html lang="tr"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>C2C · İnteraktif deneyim kanıtları</title><style>body{margin:0;background:#061f19;color:#f6f3e9;font:16px/1.7 system-ui;padding:5vw}h1{font:400 clamp(30px,5vw,64px)/1.1 Georgia;max-width:900px}a{color:#c8a968}header{max-width:1000px;margin-bottom:60px}main{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:40px}figure{margin:0;border-top:1px solid #315448;padding-top:20px}img,video{max-width:100%;height:auto}img{max-height:650px;object-fit:contain;object-position:top}figcaption{font-size:12px;margin:12px 0 30px}pre{white-space:pre-wrap;font:13px/1.8 monospace}video{width:100%;margin:20px 0 60px}</style><header><p>C2C MÜHENDİSLİK · GERÇEK TARAYICI KAYDI</p><h1>İnteraktif mühendislik deneyimi.</h1><p>${escape(report.browser)} · test sonucu: ${report.passed?'PASS':'FAIL'} · ${report.viewports.length} ekran genişliği. Kişisel Chrome oturumu kullanılmadı.</p><p><a href="production/browser-report.json">Etkileşim raporu</a> · <a href="hero/browser-report.json">Hero / rota regresyonu</a> · <a href="lighthouse/desktop-verified.report.html">Desktop Lighthouse</a> · <a href="lighthouse/mobile-verified.report.html">Mobile Lighthouse</a></p><pre>${escape(JSON.stringify(lighthouse,null,2))}</pre><p>Skorlar yerel production ölçümleridir. Hedef altında kalan değerler başarı olarak sunulmaz.</p></header><video controls preload="metadata" src="recording/c2c-interactive-scroll.webm" aria-label="Gerçek tarayıcıda Hero, donanım, kamera, çözüm vitrini ve problem anlatımı scroll kaydı"></video><main>${figures}</main></html>`);
+console.log(`Created ${root}/index.html with ${files.length} screenshots.`);
