@@ -28,9 +28,9 @@ let metal='<rect width="1024" height="1024" fill="#b8bdc0"/>';
 const noise=random(46);
 for(let y=0;y<N;y++)metal+=`<path d="M0 ${y}h1024" stroke="${y%3?'#697276':'#e1e4e5'}" stroke-opacity="${.012+noise()*.018}" stroke-width=".55"/>`;
 // Original small etched brand field; no copied commercial CPU insignia.
-const badge='<rect x="387" y="387" width="250" height="250" rx="2"';
-const lettering='<text x="512" y="543" text-anchor="middle" font-family="Arial,sans-serif" font-size="84" font-weight="500" letter-spacing="5"';
-metal+=`${badge} fill="#7c878d" fill-opacity=".07" stroke="#5f6c72" stroke-opacity=".4" stroke-width="1.6"/>${lettering} fill="#e0e5e8" fill-opacity=".7">C2C</text>`;
+const badge='<rect x="362" y="362" width="300" height="300" rx="4"';
+const lettering='<text x="512" y="548" text-anchor="middle" font-family="Arial,sans-serif" font-size="100" font-weight="600" letter-spacing="5"';
+metal+=`${badge} fill="#242B2E" fill-opacity=".78" stroke="#151B1E" stroke-opacity=".85" stroke-width="2"/>${lettering} fill="#F2F2EE" fill-opacity="1">C2C</text>`;
 // Locally matte ink/laser finish: the small mark must not catch a bright gloss.
 const stamp=await rgba(`${badge} fill="white" fill-opacity=".08" stroke="white" stroke-opacity=".3" stroke-width="1.6"/>${lettering} fill="white" fill-opacity=".04">C2C</text>`);
 const metalPixels=await rgba(metal);await color('metal-color',metalPixels);await maps('metal',metalPixels,{roughness:.5,grain:.012,normal:1.6,stamp});
