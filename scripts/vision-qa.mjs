@@ -1,3 +1,4 @@
+import { measurementUrl } from './measurement-url.mjs';
 /* global document, window */
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
@@ -23,7 +24,7 @@ const state=page=>page.locator('#kamera-deneyimi').evaluate(e=>({...e.dataset}))
 const waitTime=(page,t)=>page.waitForFunction(t=>Number(document.querySelector('#kamera-deneyimi')?.dataset.visionTime)>=t,t,{timeout:35000});
 try{
   const context=await browser.newContext({viewport:{width:1440,height:1050},reducedMotion:'no-preference'});
-  const page=await context.newPage();attach(page);await page.goto(base+'/#kamera-deneyimi',{waitUntil:'networkidle',timeout:90000});await focus(page);
+  const page=await context.newPage();attach(page);await page.goto(measurementUrl(base+'/#kamera-deneyimi'),{waitUntil:'networkidle',timeout:90000});await focus(page);
   await page.waitForSelector('.vision-station canvas[data-vision-frame]',{timeout:60000});
   await page.locator('.vision-start').click();await waitTime(page,5.8);await page.locator('.vision-start').click();
   const paused=await state(page),canvasTime=await page.locator('.vision-station canvas').getAttribute('data-vision-time');
@@ -68,7 +69,7 @@ try{
   report.checks.push('all scenarios differ in geometry/analysis; keyboard selection, reset and camera detail view work');await context.close();
   for(const width of [393,320]){
     const context=await browser.newContext({viewport:{width,height:850},hasTouch:true,reducedMotion:'no-preference'}),page=await context.newPage();attach(page);
-    await page.goto(base+'/#kamera-deneyimi',{waitUntil:'networkidle',timeout:90000});await focus(page);await page.waitForSelector('.vision-station canvas[data-vision-time]');
+    await page.goto(measurementUrl(base+'/#kamera-deneyimi'),{waitUntil:'networkidle',timeout:90000});await focus(page);await page.waitForSelector('.vision-station canvas[data-vision-time]');
     await page.locator('.vision-start').tap();await waitTime(page,5.8);await page.locator('.vision-start').tap();await shot(page,`mobile-${width}`);await fullShot(page,`mobile-${width}-section`);
     const layout=await page.locator('#kamera-deneyimi').evaluate(root=>({viewport:window.innerWidth,overflows:[...root.querySelectorAll('.vision-layout,.vision-toolbar,.vision-analysis,.vision-records')].some(e=>e.getBoundingClientRect().right>window.innerWidth+.5||e.getBoundingClientRect().left<-.5),minTarget:Math.min(...[...root.querySelectorAll('button')].map(e=>e.getBoundingClientRect().height))}));
     assert.equal(layout.overflows,false);assert.ok(layout.minTarget>=44);await page.locator('.vision-reset').tap();assert.equal((await state(page)).visionInspected,'0');
@@ -79,7 +80,7 @@ try{
     report.checks.push(`${width}px: scene, readable camera panel, touch controls, 44px targets, no section overflow`);await context.close();
   }
   const reduced=await browser.newContext({viewport:{width:393,height:850},hasTouch:true,reducedMotion:'reduce'}),rp=await reduced.newPage();attach(rp);
-  await rp.goto(base+'/#kamera-deneyimi',{waitUntil:'networkidle',timeout:90000});await focus(rp);await rp.waitForSelector('.vision-station canvas[data-vision-time]');
+  await rp.goto(measurementUrl(base+'/#kamera-deneyimi'),{waitUntil:'networkidle',timeout:90000});await focus(rp);await rp.waitForSelector('.vision-station canvas[data-vision-time]');
   for(let i=0;i<7;i++)await rp.locator('.vision-start').tap();const stepped=await state(rp);assert.ok(Number(stepped.visionInspected)>0);
   await rp.waitForTimeout(400);assert.equal((await state(rp)).visionTime,stepped.visionTime);await shot(rp,'reduced-motion');
   for(let i=0;i<40;i++){if(await rp.locator('.vision-workflow').getAttribute('data-vision-flow')==='5')break;await rp.locator('.vision-start').tap();}

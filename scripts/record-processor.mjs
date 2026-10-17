@@ -1,10 +1,11 @@
+import { measurementUrl } from './measurement-url.mjs';
 import {chromium} from 'playwright';
 import fs from 'node:fs/promises';
 const dir=process.env.RECORD_DIR||'artifacts/processor/recording';await fs.mkdir(dir,{recursive:true});
 const browser=await chromium.launch({channel:'chrome',headless:true});
 const context=await browser.newContext({viewport:{width:1440,height:900},recordVideo:{dir,size:{width:1440,height:900}}});
 const page=await context.newPage();
-await page.goto(process.env.BASE_URL||'http://localhost:3100',{waitUntil:'networkidle'});
+await page.goto(measurementUrl(process.env.BASE_URL||'http://localhost:3100'),{waitUntil:'networkidle'});
 await page.locator('.story canvas[data-model="motherboard-processor"]').waitFor();
 await page.waitForTimeout(800);
 await page.evaluate(async()=>{

@@ -1,3 +1,4 @@
+import { measurementUrl } from './measurement-url.mjs';
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -19,10 +20,10 @@ page.on('websocket', socket => {
   socket.on('socketerror', error => entry.errors.push(error));
 });
 try {
-  await page.goto(base, { waitUntil: 'networkidle' });
+  await page.goto(measurementUrl(base), { waitUntil: 'networkidle' });
   assert.equal(await page.locator('.scene-debug').count(), 0);
   report.checks.push('normal URL: panel absent');
-  await page.goto(`${base}/?debug=1`, { waitUntil: 'networkidle' });
+  await page.goto(measurementUrl(`${base}/?debug=1`), { waitUntil: 'networkidle' });
   if (production) {
     assert.equal(await page.locator('.scene-debug').count(), 0);
     report.checks.push('production debug=1: panel absent');
@@ -69,7 +70,7 @@ try {
     assert.match(await page.locator('.debug-message').innerText(), /durduruldu/);
     report.checks.push('test cancellation');
     const reduced = await browser.newPage({ reducedMotion: 'reduce' });
-    await reduced.goto(`${base}/?debug=1`, { waitUntil: 'networkidle' });
+    await reduced.goto(measurementUrl(`${base}/?debug=1`), { waitUntil: 'networkidle' });
     await reduced.waitForFunction(() => document.querySelector('[data-debug="reduced"]')?.textContent === 'On');
     assert.equal(await reduced.locator('canvas').count(), 0);
     assert.equal(await reduced.locator('.pin-spacer').count(), 0);
@@ -87,7 +88,7 @@ try {
         return type === 'webgl' || type === 'webgl2' ? null : original.call(this, type, ...args);
       };
     });
-    await failed.goto(`${base}/?debug=1`, { waitUntil: 'networkidle' });
+    await failed.goto(measurementUrl(`${base}/?debug=1`), { waitUntil: 'networkidle' });
     await failed.waitForTimeout(1500);
     await failed.waitForFunction(() => document.querySelector('[data-debug="webgl"]')?.textContent === 'Failed').catch(async error => {
       report.failedState = await failed.evaluate(() => ({ panel: document.querySelector('.scene-debug')?.innerText, renderer: document.querySelector('.story')?.dataset.renderer, visibility: document.visibilityState }));

@@ -1,4 +1,5 @@
 'use client';
+import { isMeasurementMode } from '@/lib/measurement-mode';
 import { use, useEffect, useLayoutEffect, useRef, type RefObject } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -35,7 +36,7 @@ function Contacts({mobile}:{mobile:boolean}){
     caps.current.instanceMatrix.needsUpdate=true;
     pads.current.computeBoundingSphere();caps.current.computeBoundingSphere();
   },[n,hole]);
-  useFrame(({gl})=>{if(pads.current)gl.domElement.dataset.contacts=String(pads.current.count);});
+  useFrame(({gl})=>{if(isMeasurementMode()&&pads.current)gl.domElement.dataset.contacts=String(pads.current.count);});
   return <>
     <instancedMesh ref={pads} args={[undefined,undefined,count]}><cylinderGeometry args={[mobile?.071:.057,mobile?.071:.057,.012,8]}/><meshStandardMaterial color="#c8b27b" metalness={.83} roughness={.34}/></instancedMesh>
     <instancedMesh ref={caps} args={[undefined,undefined,12]}><boxGeometry args={[.14,.045,.09]}/><meshStandardMaterial color="#777d6b" metalness={.6} roughness={.42}/></instancedMesh>
@@ -67,22 +68,27 @@ export default function ProcessorModel({progress,mobile}:{progress:RefObject<{va
     if(packageGroup.current)packageGroup.current.getWorldPosition(cpuOffset).sub(assembly.current.position);
     camera.position.set(m.cameraX*scale+cpuOffset.x,m.cameraY+cpuOffset.y,m.cameraZ*scale+cpuOffset.z);
     cameraTarget.set(cpuOffset.x,.05+cpuOffset.y,cpuOffset.z);camera.lookAt(cameraTarget);
-    if(location.search.includes('measure=1')){
+    const measure=isMeasurementMode();
+    if(measure){
       camera.updateMatrixWorld(true);
       publishHeroProjection(gl.domElement,camera,layers.current.children[3].children[0] as THREE.Mesh,layers.current.children[2].children[1] as THREE.Mesh,assembly.current,cameraTarget);
     }
     const c=gl.domElement;
-    c.dataset.frames=String(++frames.current);c.dataset.separation=m.separation.toFixed(3);c.dataset.integration=m.integration.toFixed(3);
-    c.dataset.camera=camera.position.toArray().map(v=>v.toFixed(2)).join(',');
-    c.dataset.layers=layers.current.children.map(g=>g.position.y.toFixed(4)).join(',');
-    // Read after R3F's render, including the first demand-rendered frame.
-    queueMicrotask(()=>{
-      c.dataset.drawCalls=String(gl.info.render.calls);c.dataset.triangles=String(gl.info.render.triangles);
-      c.dataset.programs=String(gl.info.programs?.length||0);c.dataset.geometries=String(gl.info.memory.geometries);c.dataset.textures=String(gl.info.memory.textures);
-    });
-    c.dataset.model='motherboard-processor';
-    c.dataset.packageLift=String(packageGroup.current?.position.y||0);
-    c.dataset.assemblyProgress=String(p);c.dataset.pullback=String(sequence.pullback);
+    ++frames.current;
+    if(measure){
+      c.dataset.frames=String(frames.current);c.dataset.separation=m.separation.toFixed(3);c.dataset.integration=m.integration.toFixed(3);
+      c.dataset.camera=camera.position.toArray().map(v=>v.toFixed(2)).join(',');
+      c.dataset.layers=layers.current.children.map(g=>g.position.y.toFixed(4)).join(',');
+      // Read after R3F's render, including the first demand-rendered frame.
+      queueMicrotask(()=>{
+        if(!isMeasurementMode())return;
+        c.dataset.drawCalls=String(gl.info.render.calls);c.dataset.triangles=String(gl.info.render.triangles);
+        c.dataset.programs=String(gl.info.programs?.length||0);c.dataset.geometries=String(gl.info.memory.geometries);c.dataset.textures=String(gl.info.memory.textures);
+      });
+      c.dataset.model='motherboard-processor';
+      c.dataset.packageLift=String(packageGroup.current?.position.y||0);
+      c.dataset.assemblyProgress=String(p);c.dataset.pullback=String(sequence.pullback);
+    }
     // Development-only export of the actual rendered scene for mobile posters.
     if(process.env.NODE_ENV==='development'&&location.search.includes('capture=1'))queueMicrotask(()=>{c.dataset.poster=c.toDataURL('image/png');});
     scene.userData.progress=p;

@@ -1,3 +1,4 @@
+import { measurementUrl } from './measurement-url.mjs';
 import {chromium} from 'playwright';
 import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
@@ -14,7 +15,7 @@ await page.addInitScript(()=>{
 });
 const report={errors,cycles:[],passed:false};
 try{
-  await page.goto(process.env.TEST_BASE_URL||'http://localhost:3100',{waitUntil:'networkidle'});
+  await page.goto(measurementUrl(process.env.TEST_BASE_URL||'http://localhost:3100'),{waitUntil:'networkidle'});
   report.documentId=await page.evaluate(()=>window.__documentId);report.memory=[];
   for(let i=0;i<3;i++){
     await page.locator('.story canvas[data-model="motherboard-processor"]').waitFor();

@@ -1,4 +1,5 @@
 'use client';
+import { isMeasurementMode } from '@/lib/measurement-mode';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useLayoutEffect, useMemo, useRef, type RefObject } from 'react';
 import * as THREE from 'three';
@@ -140,12 +141,15 @@ function Station({simulation,products,mobile,detail,onReady}:Props){
     if(belt.current){const material=belt.current.material as THREE.MeshStandardMaterial;if(material.map)material.map.offset.x=-current.time*station.speed/10.6*20;}
     if(rod.current)rod.current.scale.z=.2+actuator.stroke*1.7;
     if(capture.current)capture.current.visible=Boolean(current.inspection&&current.time-current.inspection.capturedAt<.16);
-    gl.domElement.dataset.visionFrame=String(++frames.current);gl.domElement.dataset.visionDrawCalls=String(gl.info.render.calls);gl.domElement.dataset.visionTriangles=String(gl.info.render.triangles);
-    gl.domElement.dataset.visionTime=current.time.toFixed(4);gl.domElement.dataset.visionActuator=actuator.productId??'none';
-    gl.domElement.dataset.visionStroke=actuator.stroke.toFixed(3);gl.domElement.dataset.visionProducts=JSON.stringify(current.products.map(p=>({id:p.id,...productPose(p,current.time)})));
-    gl.domElement.dataset.visionView=detail?'detail':'station';
-    gl.domElement.dataset.visionCaptureProduct=current.inspection?.product.id??'none';
-    gl.domElement.dataset.visionCamera=camera.position.toArray().map(n=>n.toFixed(2)).join(',');
+    ++frames.current;
+    if(isMeasurementMode()){
+      gl.domElement.dataset.visionFrame=String(frames.current);gl.domElement.dataset.visionDrawCalls=String(gl.info.render.calls);gl.domElement.dataset.visionTriangles=String(gl.info.render.triangles);
+      gl.domElement.dataset.visionTime=current.time.toFixed(4);gl.domElement.dataset.visionActuator=actuator.productId??'none';
+      gl.domElement.dataset.visionStroke=actuator.stroke.toFixed(3);gl.domElement.dataset.visionProducts=JSON.stringify(current.products.map(p=>({id:p.id,...productPose(p,current.time)})));
+      gl.domElement.dataset.visionView=detail?'detail':'station';
+      gl.domElement.dataset.visionCaptureProduct=current.inspection?.product.id??'none';
+      gl.domElement.dataset.visionCamera=camera.position.toArray().map(n=>n.toFixed(2)).join(',');
+    }
   });
   const m=materials;
   return <>

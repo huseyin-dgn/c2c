@@ -1,3 +1,4 @@
+import { measurementUrl } from './measurement-url.mjs';
 import { chromium } from 'playwright';
 import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
@@ -11,7 +12,7 @@ const page = await context.newPage();
 const errors = [];
 page.on('pageerror', error => errors.push(error.message));
 try {
-  await page.goto(base, { waitUntil: 'networkidle' });
+  await page.goto(measurementUrl(base), { waitUntil: 'networkidle' });
   await page.waitForSelector('canvas[data-model="motherboard-processor"]');
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(700);

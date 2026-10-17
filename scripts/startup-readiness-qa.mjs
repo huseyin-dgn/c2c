@@ -1,3 +1,4 @@
+import { measurementUrl } from './measurement-url.mjs';
 /* global document, window, getComputedStyle, scrollTo, scrollY, innerHeight */
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
@@ -20,7 +21,7 @@ try{
     const gate=new Promise(resolve=>{release=resolve}),requestSeen=new Promise(resolve=>{requested=resolve});
     await page.route('**/models/motherboard/mobile.glb.gz',async route=>{requested();await gate;await route.continue();});
     try{
-      await page.goto(base,{waitUntil:'networkidle'});
+      await page.goto(measurementUrl(base),{waitUntil:'networkidle'});
       assert.equal(await page.locator('.story canvas').count(),0);
       assert.equal(await page.evaluate(()=>performance.getEntriesByType('resource').some(r=>r.name.includes('/images/experiences/'))),false);
       await focus(page,'#donanim');await requestSeen;
@@ -59,14 +60,14 @@ try{
   // Scrolling before hydration must not be shifted by the inserted pin spacer.
   const early=await browser.newPage({viewport:{width:393,height:900}});
   await early.route('**/_next/static/chunks/*.js',async route=>{await new Promise(resolve=>setTimeout(resolve,500));await route.continue();});
-  await early.goto(base,{waitUntil:'domcontentloaded'});
+  await early.goto(measurementUrl(base),{waitUntil:'domcontentloaded'});
   await early.evaluate(()=>scrollTo(0,120));await ready(early,'.story canvas');
   assert.ok(Math.abs(await early.evaluate(()=>scrollY)-120)<2);
   assert.ok(await early.locator('.story canvas').evaluate(c=>Number(c.dataset.assemblyProgress)<.1));
   report.checks.push('early scroll before hydration stays at 120px instead of skipping the Hero');await early.close();
   const page=await browser.newPage({viewport:{width:1440,height:900}});
   page.on('pageerror',error=>report.errors.push(error.message));
-  await page.goto(base,{waitUntil:'networkidle'});await ready(page,'.story canvas');
+  await page.goto(measurementUrl(base),{waitUntil:'networkidle'});await ready(page,'.story canvas');
   const poses=[];
   for(const progress of [0,.5,1,.5,0]){
     await page.locator('.story').evaluate((e,p)=>scrollTo(0,(e.offsetHeight-innerHeight)*p),progress);await page.waitForTimeout(1000);

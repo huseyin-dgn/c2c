@@ -1,3 +1,4 @@
+import { measurementUrl, preserveMeasurementNavigation } from './measurement-url.mjs';
 /* global window, document, MutationObserver, getComputedStyle, requestAnimationFrame, scrollTo, scrollY */
 import { chromium } from 'playwright';
 import fs from 'node:fs/promises';
@@ -12,6 +13,7 @@ const browser = await chromium.launch();
 const report = process.env.AUDIT_RESUME === '1' ? JSON.parse(await fs.readFile(path.join(output, 'audit.json'), 'utf8')) :
   { environment: 'Production; Chromium headless; no CPU/network throttling; one sample per scenario', home: [], pages: [], errors: [] };
 async function initialize(page) {
+  await preserveMeasurementNavigation(page);
   page.on('pageerror', error => report.errors.push(error.message));
   await page.addInitScript(() => {
     const data = window.__audit = { lcp: null, shifts: [], tasks: [], pin: null, ready: null, intent: null };
@@ -57,7 +59,7 @@ try {
     const p = await context.newPage(); await initialize(p);
     for (const mode of ['first', 'reload']) {
       if (report.home.some(row => row.width === width && row.mode === mode)) continue;
-      if (mode === 'first') await p.goto(base, { waitUntil: 'domcontentloaded' }); else await p.reload({ waitUntil: 'domcontentloaded' });
+      if (mode === 'first') await p.goto(measurementUrl(base), { waitUntil: 'domcontentloaded' }); else await p.reload({ waitUntil: 'domcontentloaded' });
       await p.waitForSelector('.story .pin-spacer');
       // A mobile user starts touching the Hero; GPU readiness remains mandatory.
       if (width === 393) await p.locator('.story').dispatchEvent('pointerdown', { pointerType: 'touch' });
@@ -78,7 +80,7 @@ try {
       console.log(JSON.stringify({ width, mode, lcp: initial.lcp, cls: initial.cls, ready: initial.ready, prepare: initial.prepareMs, scrollMax: Math.max(...animation.deltas), logo: true }));
     }
     const row = report.home.filter(row => row.width === width).at(-1);
-    if (p.url() === 'about:blank') await p.goto(base, { waitUntil: 'networkidle' });
+    if (p.url() === 'about:blank') await p.goto(measurementUrl(base), { waitUntil: 'networkidle' });
     const hardwareStart = await p.evaluate(() => performance.now());
     await focus(p, '.hardware-viewport');
     await p.waitForFunction(() => document.querySelector('.hardware-viewport canvas')?.dataset.sceneReady === 'true', null, { timeout: 30000 });
@@ -103,16 +105,16 @@ try {
     await p.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
     await settle(p); await p.waitForTimeout(800);
     row.hiddenBefore = await frames(p); await p.waitForTimeout(250); row.hiddenAfter = await frames(p);
-    await p.locator('.header-cta').click(); await p.waitForURL('**/iletisim');
+    await p.locator('.header-cta').click(); await p.waitForURL(measurementUrl(base + '/iletisim'));
     assert.ok(Math.abs(await p.evaluate(() => scrollY)) < 2);
-    await p.locator('header .brand').click(); await p.waitForURL(base + '/');
+    await p.locator('header .brand').click(); await p.waitForURL(measurementUrl(base + '/'));
     await p.waitForFunction(() => scrollY === 0 && Number(document.querySelector('.story').dataset.progress) < .001);
     row.navigation = true;
     console.log('scene interactions and navigation PASS', width);
     await context.close();
     for (const route of ['/hakkimizda', '/projeler', '/urunlerimiz', '/cozumler', '/yaklasim', '/iletisim', '/kvkk']) {
       const page = await browser.newPage({ viewport: { width, height: 900 } }); await initialize(page);
-      const response = await page.goto(base + route, { waitUntil: 'networkidle' }); await settle(page);
+      const response = await page.goto(measurementUrl(base + route), { waitUntil: 'networkidle' }); await settle(page);
       report.pages.push({ width, route, status: response.status(), ...(await metrics(page)) });
       await page.close();
     }

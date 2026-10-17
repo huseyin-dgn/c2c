@@ -1,3 +1,4 @@
+import { measurementUrl } from './measurement-url.mjs';
 /* global document, window, scrollY, innerHeight, scrollTo, getComputedStyle, MutationObserver */
 // Browser-cache cold/warm runs; 2x CPU, 40 ms RTT, 1.6 MB/s download.
 
@@ -22,7 +23,7 @@ for(const width of [1440,393]){
  });
  for(let trial=0;trial<trials;trial++)for(const cache of ['cold','warm']){
   if(cache==='cold'){await cdp.send('Network.clearBrowserCache');await cdp.send('Network.clearBrowserCookies');}
-  const errors=[],onError=e=>errors.push(e.message);p.on('pageerror',onError);await p.goto(base,{waitUntil:'domcontentloaded'});await p.waitForTimeout(4000);
+  const errors=[],onError=e=>errors.push(e.message);p.on('pageerror',onError);await p.goto(measurementUrl(base),{waitUntil:'domcontentloaded'});await p.waitForTimeout(4000);
   const initial=await metrics(p);await p.screenshot({path:out+'/'+label+'-'+width+'-'+trial+'-'+cache+'-initial.png'});
   const intentAt=await p.evaluate(()=>{scrollTo(0,12);return performance.now()});
   let ready=true;try{await p.waitForFunction(()=>{const c=document.querySelector('.story canvas[data-model]');return c&&getComputedStyle(c).visibility==='visible'&&(!c.dataset.sceneReady||c.dataset.sceneReady==='true')},{},{timeout:30000})}catch{ready=false}

@@ -1,3 +1,4 @@
+import { measurementUrl } from './measurement-url.mjs';
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -20,7 +21,7 @@ try{
   for(const viewport of [{width:375,height:812},{width:768,height:1024},{width:1440,height:900},{width:1920,height:1080}].filter(v=>!process.env.QA_WIDTH||v.width===Number(process.env.QA_WIDTH))){
     const context=await browser.newContext({viewport,hasTouch:viewport.width<1024,reducedMotion:'no-preference',recordVideo:viewport.width===1440?{dir:output,size:{width:1440,height:900}}:undefined});
     page=await context.newPage();page.on('pageerror',error=>report.errors.push(error.message));page.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());});
-    await page.goto(base,{waitUntil:'networkidle'});
+    await page.goto(measurementUrl(base),{waitUntil:'networkidle'});
     if(viewport.width<1024){await page.waitForFunction(()=>document.querySelector('.story')?.dataset.renderer==='poster');await page.evaluate(()=>scrollTo(0,12));}
     await page.waitForSelector('.story canvas[data-camera]');
     await page.mouse.move(0,0);
@@ -114,7 +115,7 @@ try{
       if(await page.locator(selector).count())await focus(selector);
       const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);assert.ok(overflow<=1,`${viewport.width} ${selector}: overflow ${overflow}`);result.overflow.push({selector,overflow});
     }
-    await page.goto(`${base}/iletisim?alan=goruntu-isleme`,{waitUntil:'networkidle'});
+    await page.goto(measurementUrl(`${base}/iletisim?alan=goruntu-isleme`),{waitUntil:'networkidle'});
     assert.equal(await page.locator('select[name="area"]').inputValue(),'goruntu-isleme');assert.match(await page.locator('#problem-guidance').innerText(),/kamera/);
     await page.locator('select[name="area"]').selectOption('yapay-zeka');assert.match(await page.locator('#problem-guidance').innerText(),/veriye/);
     assert.equal(await page.locator('.contact-form').evaluate(form=>form.checkValidity()),false);
@@ -125,17 +126,17 @@ try{
     await context.close();
     console.log(`PASS: ${viewport.width}px interactions, screenshots, overflow`);
   }
-  const reduced=await browser.newContext({viewport:{width:1440,height:900},reducedMotion:'reduce'});page=await reduced.newPage();await page.goto(base,{waitUntil:'networkidle'});
+  const reduced=await browser.newContext({viewport:{width:1440,height:900},reducedMotion:'reduce'});page=await reduced.newPage();await page.goto(measurementUrl(base),{waitUntil:'networkidle'});
   assert.equal(await page.locator('canvas,.pin-spacer').count(),0);assert.equal(await page.locator('.solution-film').count(),5);
   await page.locator('[data-hardware-button="cpu"]').click();assert.match(await page.locator('.hardware-description').innerText(),/Genel amaçlı/);
   await page.locator('.pipeline-navigation button').last().click();assert.equal(await page.locator('#problemden-cozume').getAttribute('data-pipeline-stage'),'4');
   await focus('.problem-visual');await shot('reduced-motion');await reduced.close();report.checks.push('Reduced motion: no Canvas/pins, all content and manual controls available');
   const fallback=await browser.newContext({viewport:{width:1440,height:900},reducedMotion:'no-preference'});page=await fallback.newPage();
   await page.addInitScript(()=>{const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return type==='webgl'||type==='webgl2'?null:original.call(this,type,...args);};});
-  await page.goto(base,{waitUntil:'networkidle'});await focus('.hardware-viewport');await page.waitForTimeout(1500);
+  await page.goto(measurementUrl(base),{waitUntil:'networkidle'});await focus('.hardware-viewport');await page.waitForTimeout(1500);
   assert.equal(await page.locator('.story').getAttribute('data-renderer'),'fallback');assert.equal(await page.locator('[data-hardware-fallback]').count(),1);
   await page.locator('[data-hardware-button="ssd"]').click();assert.match(await page.locator('.hardware-description').innerText(),/kalıcı/);await focus('.hardware-viewport');await shot('webgl-unavailable');await fallback.close();report.checks.push('WebGL unavailable: both scenes retain meaningful fallback and hardware selection');
-  const loss=await browser.newContext({viewport:{width:1440,height:900},reducedMotion:'no-preference'});page=await loss.newPage();await page.goto(base,{waitUntil:'networkidle'});await focus('.hardware-viewport');await page.waitForSelector('.hardware-viewport canvas');
+  const loss=await browser.newContext({viewport:{width:1440,height:900},reducedMotion:'no-preference'});page=await loss.newPage();await page.goto(measurementUrl(base),{waitUntil:'networkidle'});await focus('.hardware-viewport');await page.waitForSelector('.hardware-viewport canvas');
   await page.locator('.hardware-viewport canvas').evaluate(c=>c.getContext('webgl2').getExtension('WEBGL_lose_context').loseContext());await page.waitForSelector('[data-hardware-fallback]');await shot('hardware-context-lost');await loss.close();report.checks.push('Actual WEBGL_lose_context: hardware fallback');
   assert.deepEqual(report.errors,[]);report.passed=true;
 }catch(error){report.error={message:error.message,stack:error.stack};if(page&&!page.isClosed())await shot('failure').catch(()=>{});process.exitCode=1;}

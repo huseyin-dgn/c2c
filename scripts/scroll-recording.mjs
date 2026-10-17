@@ -1,3 +1,4 @@
+import { measurementUrl } from './measurement-url.mjs';
 import { chromium } from 'playwright';
 import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
@@ -14,7 +15,7 @@ const page = await context.newPage();
 const errors = [];
 page.on('pageerror', error => errors.push(error.message));
 try {
-  await page.goto(base, { waitUntil: 'networkidle' });
+  await page.goto(measurementUrl(base), { waitUntil: 'networkidle' });
   await page.waitForSelector('canvas[data-camera]');
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(1500);
@@ -45,7 +46,7 @@ try {
   const stills = await browser.newPage({ reducedMotion: 'no-preference' });
   for (const width of [375, 1440]) {
     await stills.setViewportSize({ width, height: 900 });
-    await stills.goto(base, { waitUntil: 'networkidle' });
+    await stills.goto(measurementUrl(base), { waitUntil: 'networkidle' });
     await stills.waitForSelector('canvas[data-camera]');
     await stills.screenshot({ path: `${output}/${width}-hero.png` });
     for (const [name, selector] of Object.entries({ solutions: '.solutions-section', applications: '.usecases', approach: '.technical', team: '.team-section' })) {

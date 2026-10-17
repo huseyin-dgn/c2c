@@ -1,3 +1,4 @@
+import { measurementUrl } from './measurement-url.mjs';
 import { chromium } from 'playwright';
 import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
@@ -14,7 +15,7 @@ try{
 for(const [width,height] of [[375,812],[768,1024],[1440,900],[1920,1080]]){
   const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto(base,{waitUntil:'networkidle'});
+  await page.goto(measurementUrl(base),{waitUntil:'networkidle'});
   if(!baseline&&width<1024){
     await page.waitForFunction(()=>document.querySelector('.story')?.dataset.renderer==='poster');
     assert.equal(await page.locator('.story canvas').count(),0,'mobile first paint uses the real-scene poster');
@@ -60,7 +61,7 @@ if(!baseline){
   for(const mode of ['reduced','denied','lost']){
     const page=await browser.newPage({viewport:{width:1440,height:900},reducedMotion:mode==='reduced'?'reduce':'no-preference'});
     if(mode==='denied')await page.addInitScript(()=>{const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return /webgl/.test(type)?null:original.call(this,type,...args);};});
-    await page.goto(base,{waitUntil:'networkidle'});
+    await page.goto(measurementUrl(base),{waitUntil:'networkidle'});
     if(mode==='lost'){
       await page.locator('.story canvas[data-model]').waitFor();
       await page.locator('.story canvas').evaluate(c=>c.getContext('webgl2').getExtension('WEBGL_lose_context').loseContext());

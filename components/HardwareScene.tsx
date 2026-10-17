@@ -1,4 +1,5 @@
 'use client';
+import { isMeasurementMode } from '@/lib/measurement-mode';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Suspense } from 'react';
 import MotherboardModel, {MotherboardReady,preloadMotherboard} from './MotherboardModel';
@@ -225,7 +226,7 @@ function DataRoutes({selected,paused,reduced,mobile}:{selected:HardwareId|null;p
       }
       if(uniforms.strength.value!==target)invalidate();
     }
-    gl.domElement.dataset.hardwareFlow=visible?selected??'fading':'none';
+    if(isMeasurementMode())gl.domElement.dataset.hardwareFlow=visible?selected??'fading':'none';
   });
   return <group>{routes.map(route=><mesh key={route.id} ref={mesh=>{if(mesh)meshes.current[route.id]=mesh;}} geometry={route.geometry} material={route.material} raycast={()=>{}} />)}</group>;
 }
@@ -468,11 +469,14 @@ function Assembly(props: Props & { mobile: boolean; ready: boolean; reduced: boo
       if(motion.speed>0)invalidate();
     }
     if(fan.current)fan.current.rotation.y=fanMotion.current.angle;
-    gl.domElement.dataset.hardwareYaw=(rotation.current.yaw+rotation.current.intro).toFixed(4);
-    gl.domElement.dataset.hardwarePart=active??'none'; gl.domElement.dataset.explosion=explosion.current.value.toFixed(3);
-    gl.domElement.dataset.flowFrame=String(Math.round(clock.current*1000));
-    gl.domElement.dataset.hardwareFrame=String(++frames.current);
-    gl.domElement.dataset.hardwareCamera=[camera.position.x,camera.position.y,camera.position.z].map(n=>n.toFixed(3)).join(',');
+    ++frames.current;
+    if(isMeasurementMode()){
+      gl.domElement.dataset.hardwareYaw=(rotation.current.yaw+rotation.current.intro).toFixed(4);
+      gl.domElement.dataset.hardwarePart=active??'none'; gl.domElement.dataset.explosion=explosion.current.value.toFixed(3);
+      gl.domElement.dataset.flowFrame=String(Math.round(clock.current*1000));
+      gl.domElement.dataset.hardwareFrame=String(frames.current);
+      gl.domElement.dataset.hardwareCamera=[camera.position.x,camera.position.y,camera.position.z].map(n=>n.toFixed(3)).join(',');
+    }
   });
   const group=(id:HardwareId,children:React.ReactNode)=><group key={id} ref={value=>{if(value)parts.current[id]=value;}} onPointerOver={e=>{e.stopPropagation();if(e.pointerType!=='touch')props.onHover(id);}} onPointerOut={e=>{e.stopPropagation();props.onHover(null);}} onClick={e=>{e.stopPropagation();props.onHover(null);props.onSelect(id);}}>{children}</group>;
   const cpu=materials.cpu,gpu=materials.gpu,ram=materials.ram,ssd=materials.ssd,cool=materials.cooling,io=materials.io;

@@ -1,3 +1,4 @@
+import { measurementUrl } from './measurement-url.mjs';
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -13,7 +14,7 @@ page.on('console', message => { if (message.type() === 'error') report.errors.pu
 try {
   for (const width of [375, 768, 1440, 1920]) {
     await page.setViewportSize({ width, height: width < 800 ? 900 : 1000 });
-    await page.goto(base, { waitUntil: 'networkidle' });
+    await page.goto(measurementUrl(base), { waitUntil: 'networkidle' });
     if(width<1024){await page.waitForFunction(()=>document.querySelector('.story')?.dataset.renderer==='poster');await page.evaluate(()=>scrollTo(0,12));}
     await page.waitForSelector('canvas[data-model="motherboard-processor"]');
     const sections = await page.locator('[data-motion-region]').evaluateAll(elements => elements.map(element => element.dataset.motionRegion));
@@ -58,7 +59,7 @@ try {
     }
     report.widths.push(result);
   }
-  await page.goto(`${base}/projeler`, { waitUntil: 'networkidle' });
+  await page.goto(measurementUrl(`${base}/projeler`), { waitUntil: 'networkidle' });
   assert.equal(await page.locator('.capability-spread').count(), 3);
   assert.equal(await page.locator('.project-card').count(), 0);
   assert.match(await page.locator('.development-note').innerText(), /müşteri projeleri.*değildir/);
@@ -66,7 +67,7 @@ try {
   await page.waitForURL('**/iletisim?alan=goruntu-isleme');
   assert.equal(await page.locator('#area').inputValue(), 'goruntu-isleme');
   report.checks.push('solution areas replace portfolio; CTA preselects the real contact field');
-  await page.goto(base, { waitUntil: 'networkidle' });
+  await page.goto(measurementUrl(base), { waitUntil: 'networkidle' });
   await page.waitForSelector('canvas[data-camera]');
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.waitForFunction(() => [...document.querySelectorAll('[data-motion-region]')].every(region => region.dataset.motionState === 'reduced'));
@@ -75,7 +76,7 @@ try {
   await page.locator('.about-editorial').screenshot({ path: `${output}/reduced-motion.png`, style: '.skip-link:not(:focus){visibility:hidden!important}' });
   report.checks.push('runtime reduced-motion change: all copy visible, all motion reverted, no canvas/pin');
   const nojs = await browser.newPage({ javaScriptEnabled: false, viewport: { width: 375, height: 812 } });
-  await nojs.goto(base);
+  await nojs.goto(measurementUrl(base));
   assert.equal(await nojs.locator('.core-fallback').count(), 1);
   assert.equal(await nojs.locator('.solution-film').count(), 5);
   assert.ok(await nojs.locator('.solution-film h3').first().isVisible());

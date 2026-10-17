@@ -1,3 +1,4 @@
+import { measurementUrl } from './measurement-url.mjs';
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -76,7 +77,7 @@ try {
     { width: 1920, height: 1080 },
   ]) {
     await page.setViewportSize(viewport);
-    await page.goto(base, { waitUntil: 'networkidle' });
+    await page.goto(measurementUrl(base), { waitUntil: 'networkidle' });
     await ready();
     // CPU motion is scroll-driven and stops rendering at rest.
     await page.mouse.move(0, 0);
@@ -144,7 +145,7 @@ try {
     report.viewports.push(result);
   }
   await page.setViewportSize({ width: 375, height: 812 });
-  await page.goto(base);
+  await page.goto(measurementUrl(base));
   await ready();
   await page.getByRole('button', { name: 'Menüyü aç' }).click();
   assert.equal(
@@ -157,7 +158,7 @@ try {
     'false',
   );
   report.interactions.push('mobile menu and Escape');
-  await page.goto(`${base}/yaklasim`, { waitUntil: 'networkidle' });
+  await page.goto(measurementUrl(`${base}/yaklasim`), { waitUntil: 'networkidle' });
   await page.getByRole('tab', { name: /01 İhtiyaç analizi/ }).focus();
   await page.keyboard.press('ArrowRight');
   assert.equal(
@@ -178,7 +179,7 @@ try {
       '/iletisim',
       '/kvkk',
     ]) {
-      await page.goto(base + route, { waitUntil: 'networkidle' });
+      await page.goto(measurementUrl(base + route), { waitUntil: 'networkidle' });
       assert.ok(
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
         `${route} at ${width}: overflow`,
@@ -193,12 +194,12 @@ try {
           .screenshot({ path: path.join(output, `${width}-iletisim-form.png`),style:'.skip-link:not(:focus){visibility:hidden!important}' });
     }
   }
-  await page.goto(`${base}/iletisim?alan=otomasyon`);
+  await page.goto(measurementUrl(`${base}/iletisim?alan=otomasyon`));
   assert.equal(await page.locator('#area').inputValue(), 'otomasyon');
   assert.ok(await page.getByRole('button', { name: 'Proje Talebini Gönder' }).isDisabled());
   report.interactions.push('query-selected solution and disabled delivery');
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(base);
+  await page.goto(measurementUrl(base));
   await ready();
   await seek(0.5);
   report.performance = await page.evaluate(async () => {
@@ -243,7 +244,7 @@ try {
     viewport: { width: 375, height: 812 },
     reducedMotion: 'reduce',
   });
-  await reducedPage.goto(base, { waitUntil: 'networkidle' });
+  await reducedPage.goto(measurementUrl(base), { waitUntil: 'networkidle' });
   assert.equal(await reducedPage.locator('canvas').count(), 0);
   assert.equal(await reducedPage.locator('.pin-spacer').count(), 0);
   assert.equal(await reducedPage.locator('.reduced-narrative article').count(), 3);
@@ -263,7 +264,7 @@ try {
       return type === 'webgl' || type === 'webgl2' ? null : original.call(this, type, ...args);
     };
   });
-  await fallbackPage.goto(base, { waitUntil: 'networkidle' });
+  await fallbackPage.goto(measurementUrl(base), { waitUntil: 'networkidle' });
   await fallbackPage.waitForFunction(
     () => document.querySelector('.story')?.dataset.renderer === 'fallback',
   );
