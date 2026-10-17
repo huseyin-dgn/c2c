@@ -1,4 +1,5 @@
 import { measurementUrl } from './measurement-url.mjs';
+import { focusVision } from './vision-qa-helpers.mjs';
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -65,7 +66,33 @@ try{
       await page.getByRole('button',{name:/^Donan.m ak.*s.rd.r$/}).click();
       await page.getByRole('button',{name:/^Se.imi s.f.rla$/}).click();await page.mouse.move(0,0);
     }
-    assert.equal(await page.locator('#kamera-deneyimi').count(),0,'redundant camera demo is removed');
+    assert.equal(await page.locator('#kamera-deneyimi').count(),1,'one industrial camera experience is present');
+    await focusVision(page);
+    assert.match(await page.locator('#kamera-deneyimi h2').innerText(),/Görüntüden karara/);
+    assert.equal(await page.locator('.vision-station canvas').isVisible(),true);
+    assert.equal(await page.locator('.vision-start').isEnabled(),true);
+    await page.locator('.vision-start').click();
+    await page.waitForFunction(()=>{
+      const section=document.querySelector('#kamera-deneyimi'),canvas=section.querySelector('canvas');
+      return section.dataset.visionRunning==='true'&&Number(section.dataset.visionTime)>.2&&
+        Number(canvas?.dataset.visionTime)>.2&&Number(canvas?.dataset.visionDrawCalls)>0;
+    });
+    await page.locator('.vision-start').click();
+    await page.waitForFunction(()=>{
+      const section=document.querySelector('#kamera-deneyimi'),canvas=section.querySelector('canvas');
+      return section.dataset.visionRunning==='false'&&
+        Math.abs(Number(section.dataset.visionTime)-Number(canvas?.dataset.visionTime))<.001;
+    });
+    const pausedVision=await page.locator('#kamera-deneyimi').evaluate(e=>({...e.dataset}));
+    assert.equal(pausedVision.visionRunning,'false');
+    const pausedFrame=await page.locator('.vision-station canvas').getAttribute('data-vision-time');
+    assert.ok(Math.abs(Number(pausedVision.visionTime)-Number(pausedFrame))<.001,'pause matches the rendered simulation clock');
+    await page.waitForTimeout(350);
+    assert.deepEqual(await page.locator('#kamera-deneyimi').evaluate(e=>({...e.dataset})),pausedVision);
+    assert.equal(await page.locator('.vision-station canvas').getAttribute('data-vision-time'),pausedFrame);
+    await page.locator('.vision-reset').click();
+    assert.equal(await page.locator('#kamera-deneyimi').getAttribute('data-vision-time'),'0.000');
+    result.vision={rendered:true,playback:true,pause:true,reset:true};
     assert.equal(await page.locator('.solution-film').count(),5);
     if(viewport.width>=1024){
       for(const progress of [0,.25,.5,.75,1,.75,.5,.25,0]){

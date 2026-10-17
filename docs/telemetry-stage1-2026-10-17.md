@@ -1,5 +1,7 @@
 # P1.1 — Production frame telemetry
 
+İlk doğrulama kaydı aşağıdadır. O tarihte başarısız olan iki eski QA testi sonradan ayrı bir test değişikliğiyle güncellendi; son doğrulama sonuçları dosyanın sonunda yer alır.
+
 Kapsam yalnızca üç 3D sahnenin ölçüm amaçlı kare telemetry'sidir. Başlangıçta çalışma ağacı temizdi. Modeller, DPR, materyaller, shader, ışık, kamera, GSAP, ilk etkileşim politikası, GPU hazırlığı ve Canvas yaşam döngüsü değiştirilmedi.
 
 ## Uygulama
@@ -47,3 +49,9 @@ Normal Hero'nun kapalı/açık katman pozları gözle incelendi. Kapalı Hero po
 Tüm-site visual/creative/diagnostics, processor, resource, kayıt ve poster üretim scriptleri çalıştırılmadı; URL uyarlamaları kod incelemesiyle kontrol edildi. Önceki audit dosyaları değiştirilmedi.
 
 Test hatalarında commit oluşturmama talimatı gereği commit/push yapılmadı.
+
+## Son QA doğrulaması
+
+Kullanıcının sonraki talimatıyla yalnızca QA testleri güncellendi; uygulamanın P1.1 değişiklikleri korunmuştur. Production build üzerinde `interactive-qa` dört viewport'un tamamında, `vision-qa` masaüstü/393/320 px ve reduced-motion senaryolarında başarılıdır. `telemetry-mode-qa` tekrarında `/`, `measure=0`, `measure=10`, `measure=1`, canlı query değişimleri, reload/route back ve fallback kontrolleri de başarılıdır. Browser hata listeleri boştur. TypeScript, lint, build ve 27 birim testi başarılıdır.
+
+QA değişiklikleri ve eski HEAD karşılaştırmasının ayrıntıları: [P1.1 QA incelemesi](p11-test-investigation-2026-10-17.md). Ham son test sonuçları `%TEMP%/c2c-p11-final-interactive/`, `%TEMP%/c2c-p11-final-vision/` ve `%TEMP%/c2c-p11-final-telemetry/` dizinlerindedir. Timeout yükseltilmedi; mevcut test kontrollerinin kapsamı azaltılmadı. GitHub'a push yapılmadı.

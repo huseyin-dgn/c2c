@@ -1,4 +1,5 @@
 import { measurementUrl } from './measurement-url.mjs';
+import { focusVision, resizeVisionViewport } from './vision-qa-helpers.mjs';
 /* global document, window */
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
@@ -11,17 +12,23 @@ const browser=await chromium.launch({channel:'chrome',headless:true});
 const report={checks:[],errors:[],screenshots:[],performance:[]};
 const base=process.env.TEST_BASE_URL||'http://localhost:3000';
 const attach=page=>{page.on('pageerror',e=>report.errors.push(e.message));page.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());});};
-const focus=page=>page.locator('#kamera-deneyimi').evaluate(e=>window.scrollTo({top:e.getBoundingClientRect().top+window.scrollY-120,behavior:'instant'}));
+const focus=focusVision;
 const shot=async(page,name,selector='.vision-layout')=>{const file=path.join(output,`${name}.png`);await page.locator(selector).screenshot({path:file});report.screenshots.push(file);};
 const fullShot=async(page,name)=>{
   const viewport=page.viewportSize(),height=Math.ceil(await page.locator('#kamera-deneyimi').evaluate(e=>e.getBoundingClientRect().height))+120;
-  await page.setViewportSize({...viewport,height});await focus(page);
+  await resizeVisionViewport(page,{...viewport,height});
   await page.waitForSelector('.vision-station canvas[data-vision-time]');await page.waitForTimeout(250);
   await shot(page,name,'#kamera-deneyimi');
-  await page.setViewportSize(viewport);await focus(page);await page.waitForSelector('.vision-station canvas[data-vision-time]');
+  await resizeVisionViewport(page,viewport);await page.waitForSelector('.vision-station canvas[data-vision-time]');
 };
 const state=page=>page.locator('#kamera-deneyimi').evaluate(e=>({...e.dataset}));
-const waitTime=(page,t)=>page.waitForFunction(t=>Number(document.querySelector('#kamera-deneyimi')?.dataset.visionTime)>=t,t,{timeout:35000});
+const waitTime=(page,t)=>page.waitForFunction(t=>{
+  const section=document.querySelector('#kamera-deneyimi'),canvas=section?.querySelector('canvas');
+  if(!canvas)return false;
+  const rect=canvas.getBoundingClientRect();
+  return section.dataset.visionRunning==='true'&&rect.bottom>0&&rect.top<window.innerHeight&&
+    Number(section.dataset.visionTime)>=t&&Number(canvas.dataset.visionTime)>=t;
+},t,{timeout:35000});
 try{
   const context=await browser.newContext({viewport:{width:1440,height:1050},reducedMotion:'no-preference'});
   const page=await context.newPage();attach(page);await page.goto(measurementUrl(base+'/#kamera-deneyimi'),{waitUntil:'networkidle',timeout:90000});await focus(page);
