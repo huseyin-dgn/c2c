@@ -1,12 +1,15 @@
 'use client';
 import dynamic from 'next/dynamic';
-import { Component, useRef, useState, type ReactNode } from 'react';
+import { Component, useCallback, useRef, useState, type ReactNode } from 'react';
 import { hardware, type HardwareId } from '@/lib/hardware';
 import { useActivity } from '@/lib/use-activity';
+import {useNearViewport} from '@/lib/use-near-viewport';
 import { useScrollLayout } from '@/lib/use-scroll-layout';
 import { recordSceneError } from '@/lib/scene-diagnostics';
 import HardwareFallback from './HardwareFallback';
-const HardwareScene = dynamic(() => import('./HardwareScene'), { ssr: false, loading: () => <HardwareFallback active={null} /> });
+import HardwareLoading from './HardwareLoading';
+import styles from './HardwareExperience.module.css';
+const HardwareScene = dynamic(() => import('./HardwareScene'), { ssr: false, loading: () => <HardwareLoading /> });
 class HardwareBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() { return { failed: true }; }
@@ -17,24 +20,34 @@ export default function HardwareExperience() {
   const root = useRef<HTMLElement>(null);
   useScrollLayout(root);
   const { visible, reduced } = useActivity(root);
+  const requested=useNearViewport(root,'1200px 0px',!reduced);
+  const [interacted, setInteracted] = useState(false);
+  const introPlayed = useRef(false);
+  const interactionSeen = useRef(false);
+  const stopIntroduction = useCallback(() => {
+    if (interactionSeen.current) return;
+    interactionSeen.current = true;
+    setInteracted(true);
+  }, []);
   const [selected, setSelected] = useState<HardwareId | null>(null);
   const [hovered, setHovered] = useState<HardwareId | null>(null);
   const [exploded, setExploded] = useState(false);
   const [paused, setPaused] = useState(false);
-  const selectPart=(id:HardwareId|null)=>{
+  const selectPart=useCallback((id:HardwareId|null)=>{
     setHovered(null);
     setSelected(current=>id===null || current===id?null:id);
-  };
+  },[]);
   const active = selected ?? hovered;
   const part = hardware.find(item => item.id === active);
   const fallback = <HardwareFallback active={active} exploded={exploded} onSelect={selectPart} />;
   return <section ref={root} id="donanim" className="hardware-experience interactive-section" data-hardware-selection={active ?? 'none'} data-hardware-selected={selected ?? 'none'}>
     <div className="container">
-      <div className="interactive-heading"><span className="eyebrow">İNTERAKTİF BİLGİSAYAR MİMARİSİ</span><h2>Parçaları inceleyin.<br /><em>Sistemi anlayın.</em></h2><p>Donanımın gerçek görevlerini keşfedin; hesaplama, veri ve entegrasyon yaklaşımımızla bağlantısını görün.</p></div>
-      <div className="hardware-layout">
+      <div className="interactive-heading"><span className="eyebrow">İNTERAKTİF BİLGİSAYAR MİMARİSİ</span><h2>PC donanımını keşfedin.<br /><em>3D olarak inceleyin.</em></h2><p>Bu etkileşimli 3D mühendislik deneyiminde bileşenleri seçin, sistemi ayırın ve her parçanın görevini keşfedin.</p></div>
+      <div className="hardware-layout" onPointerDownCapture={stopIntroduction} onPointerMoveCapture={stopIntroduction} onKeyDownCapture={stopIntroduction} onWheelCapture={stopIntroduction}>
         <div className="hardware-stage">
+          <p id="hardware-guide" className={styles.guide}><span>Parçaları seçerek inceleyin.</span><span>{reduced ? 'Hareket azaltıldı; bileşen listesini kullanın.' : 'Modeli sürükleyerek döndürün.'}</span></p>
           <div className="hardware-viewport">
-            {reduced || !visible ? fallback : <HardwareBoundary fallback={fallback}><HardwareScene selected={selected} hovered={hovered} exploded={exploded} paused={paused} onSelect={selectPart} onHover={setHovered} /></HardwareBoundary>}
+            {reduced ? fallback : !requested ? <HardwareLoading /> : <HardwareBoundary fallback={fallback}><HardwareScene interacted={interacted} introPlayed={introPlayed} active={visible} selected={selected} hovered={hovered} exploded={exploded} paused={paused} onSelect={selectPart} onHover={setHovered} /></HardwareBoundary>}
           </div>
           <div className="hardware-controls"><button type="button" className="quiet-control" aria-pressed={exploded} onClick={()=>setExploded(value=>!value)}>{exploded ? 'Birleştir' : 'Parçaları Keşfet'}</button><button type="button" className="quiet-control" onClick={()=>{setSelected(null);setHovered(null);setExploded(false);}}>Seçimi sıfırla</button><button type="button" className="quiet-control" aria-pressed={paused} onClick={()=>setPaused(value=>!value)} disabled={reduced}>{paused ? 'Donanım akışını sürdür' : 'Donanım akışını duraklat'}</button></div>
           <p className="experience-note">Özgün donanım görselleştirmesi. Işık akışı temsili veri yollarını gösterir. Parçaların yerleşimi montaj ilişkilerini açıklar; belirli bir üretici modelinin CAD çizimi değildir.</p>

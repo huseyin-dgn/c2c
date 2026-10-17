@@ -1,0 +1,270 @@
+
+.wrapper {
+  width: 100%;
+  min-width: 0;
+  --contact-green: #061f19;
+  --contact-forest: #0b3027;
+  --contact-gold: #c8a968;
+  --contact-ivory: #f6f3e9;
+}
+
+.modeHeading {
+  margin-bottom: 27px;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 14px;
+  color: #867044;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.modeHeading h2 {
+  margin: 0 0 12px;
+  color: var(--contact-green);
+  font-size: clamp(24px, 2.7vw, 36px);
+  line-height: 1.2;
+  font-weight: 550;
+  letter-spacing: -0.04em;
+}
+
+.modeHeading p,
+.formHeading p {
+  margin: 0;
+  color: #617168;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.modeGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.modeCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 11px;
+  min-width: 0;
+  padding: 23px;
+  background: #f6f3e9;
+  border: 1px solid #d9dfd5;
+  border-radius: 2px;
+  color: var(--contact-green);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition:
+    border-color 200ms ease,
+    background 200ms ease;
+}
+
+.modeCard:hover {
+  border-color: #8ba495;
+}
+
+.modeCard.active {
+  border-color: var(--contact-forest);
+  background: #eaf0e8;
+  box-shadow: inset 0 0 0 1px var(--contact-forest);
+}
+
+.modeCard svg {
+  color: #537867;
+}
+
+.modeCard.active svg {
+  color: var(--contact-forest);
+}
+
+.modeCard strong {
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.modeCard span {
+  color: #65766c;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.generalForm {
+  padding: clamp(24px, 4vw, 38px);
+  border: 1px solid #dfe4da;
+  background: #fbfaf6;
+}
+
+.formHeading {
+  margin-bottom: 25px;
+}
+
+.formHeading h3 {
+  margin: 0 0 11px;
+  color: var(--contact-green);
+  font-size: clamp(24px, 2.6vw, 34px);
+  font-weight: 550;
+  letter-spacing: -0.04em;
+}
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 28px;
+  padding: 15px 17px;
+  background: #f1eee4;
+  border-left: 2px solid var(--contact-gold);
+}
+
+.notice svg {
+  flex: none;
+  margin-top: 2px;
+  color: #927642;
+}
+
+.notice p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #58645c;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 23px;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 9px;
+}
+
+.field > span {
+  color: #263a30;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.field input,
+.field textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 14px 15px;
+  background: #fff;
+  color: var(--contact-green);
+  border: 1px solid #cdd7cd;
+  border-radius: 2px;
+  outline: none;
+  font: inherit;
+  font-size: 14px;
+  transition: border-color 180ms ease;
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 140px;
+}
+
+.field input:focus,
+.field textarea:focus {
+  border-color: #356950;
+  box-shadow: 0 0 0 2px rgba(53, 105, 80, 0.12);
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: #8a958d;
+}
+
+.privacy {
+  margin: 0;
+  color: #67756b;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.privacy a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+  color: var(--contact-forest);
+  text-underline-offset: 3px;
+}
+
+.submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  padding: 18px 21px;
+  background: var(--contact-green);
+  border: 0;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.disabledNote {
+  margin: -12px 0 0;
+  color: #758278;
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .modeGrid {
+    gap: 9px;
+  }
+
+  .modeCard {
+    padding: 16px 13px;
+  }
+
+  .modeCard strong {
+    font-size: 14px;
+  }
+
+  .modeCard span {
+    font-size: 11px;
+  }
+
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+
+  .generalForm {
+    padding: 22px 17px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modeCard,
+  .field input,
+  .field textarea {
+    transition: none;
+  }
+}

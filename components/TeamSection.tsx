@@ -23,7 +23,7 @@ export default function TeamSection() {
                 <p>Bilgisayar Mühendisi</p>
                 <span>Tokat Gaziosmanpaşa Üniversitesi</span>
                 <a
-                  href={person.github}
+                  href={person.linkedin}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-link"

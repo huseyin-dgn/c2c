@@ -19,7 +19,7 @@ export default function SiteFooter() {
         </div>
         <div className="footer-links">
           {team.map((person) => (
-            <a key={person.name} href={person.github} target="_blank" rel="noopener noreferrer">
+            <a key={person.name} href={person.linkedin} target="_blank" rel="noopener noreferrer">
               {person.name} <ArrowUpRight size={13} />
             </a>
           ))}

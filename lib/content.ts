@@ -1,75 +1,108 @@
-// Turkish content is isolated here so a future locale can use the same components.
+
+/*
+ * C2C Mühendislik
+ * Merkezi Türkçe site içerikleri
+ */
+
+// KURUCU EKİP
+
 export const team = [
   {
     name: 'İlker Akbal',
     initials: 'İA',
-    github: 'https://github.com/ilker-Akbal',
+    linkedin:
+      'https://www.linkedin.com/in/ilker-akbal-b963ab25a/',
   },
   {
     name: 'Hüseyin Doğan',
     initials: 'HD',
-    github: 'https://github.com/huseyin-dgn',
+    linkedin:
+      'https://www.linkedin.com/in/huseyin-dogan-47136333b/',
   },
 ];
+
+// ÇÖZÜMLERİMİZ
+
 export const solutions = [
   {
     slug: 'yapay-zeka',
-    title: 'Veriden karara.',
-    name: 'Yapay zekâ & makine öğrenmesi',
+    title: 'Yapay zekâ destekli veri analizi.',
+    name: 'Yapay Zekâ ve Makine Öğrenmesi',
     icon: 'brain',
-    description: 'Verinizi anlamlı öngörülere dönüştüren, ihtiyacınıza göre tasarlanan modeller.',
-    examples: ['Talep ve süreç tahminleme', 'Anomali analizi', 'Karar destek sistemleri'],
+    description:
+      'İşletmelerin verilerini analiz ederek tahminleme, anomali tespiti ve karar destek süreçlerine yönelik makine öğrenmesi sistemleri geliştiriyoruz.',
+    examples: [
+      'Talep ve operasyon tahminleme',
+      'Anomali tespiti ve veri analizi',
+      'Karar destek ve sınıflandırma sistemleri',
+    ],
     approach:
-      'Veri kalitesini ve problemin ölçülebilirliğini inceleriz. Basit bir referans modelle başlayıp uygun öğrenme yaklaşımını karşılaştırmalı deneylerle belirleriz.',
+      'Veri yapısını, kalitesini ve iş hedeflerini değerlendirerek uygun algoritmaları belirliyoruz. Modelleri tanımlanmış başarı kriterleri doğrultusunda test ediyor, sonuçları mevcut iş süreçleriyle uyumlu şekilde ele alıyoruz.',
   },
   {
     slug: 'goruntu-isleme',
-    title: 'Görüntüden içgörüye.',
-    name: 'Görüntü işleme & bilgisayarlı görü',
+    title: 'Görsel verilerden operasyonel bilgi.',
+    name: 'Görüntü İşleme ve Bilgisayarlı Görü',
     icon: 'scan',
     description:
-      'Kamera akışlarını ve görsel verileri, işlem yapılabilir bilgiye dönüştüren sistemler.',
-    examples: ['Görsel kalite kontrol', 'Nesne tanıma ve sayım', 'Alan ihlali analizi'],
+      'Kamera görüntülerinin analiz edilmesi, nesnelerin tespit edilmesi ve görsel kontrol süreçlerinin otomatikleştirilmesine yönelik yazılım sistemleri geliştiriyoruz.',
+    examples: [
+      'Endüstriyel görsel kalite kontrol',
+      'Nesne tespiti, sayım ve sınıflandırma',
+      'Alan ihlali ve olay analizi',
+    ],
     approach:
-      'Kamera konumu, ışık, veri çeşitliliği ve gecikme sınırlarını birlikte değerlendiririz. Model çıktısını gerçek operasyon koşullarında test edilebilir bir akışa yerleştiririz.',
+      'Kamera konumu, aydınlatma, görüntü kalitesi ve işlem süresi gereksinimlerini değerlendiriyoruz. Bilgisayarlı görü modellerini çalışma ortamına uygun biçimde tasarlıyor, tespit sonuçlarını ölçülebilir kriterlerle doğruluyoruz.',
   },
   {
     slug: 'siber-guvenlik',
-    title: 'Güven, tasarımla başlar.',
-    name: 'Güvenlik odaklı yazılım sistemleri',
+    title: 'Güvenlik odaklı yazılım mimarileri.',
+    name: 'Güvenlik Odaklı Yazılım Sistemleri',
     icon: 'shield',
     description:
-      'Güvenliği geliştirme sürecinin bir parçası yapan, izlenebilir yazılım yaklaşımları.',
-    examples: ['Güvenlik loglarının analizi', 'Olay sınıflandırma', 'Güvenli servis tasarımı'],
+      'Yazılım sistemlerinde güvenli veri işleme, erişim kontrolü, olay kayıtları ve izlenebilirlik gereksinimlerini dikkate alan çözümler tasarlıyoruz.',
+    examples: [
+      'Güvenlik olaylarının kayıt ve analizi',
+      'Yetkilendirme ve erişim kontrolü',
+      'Güvenli API ve servis geliştirme',
+    ],
     approach:
-      'Veri akışlarını ve erişim sınırlarını tanımlarız. En az yetki, girdi doğrulama ve güvenli varsayılanlar ilkelerini çözüm mimarisine dahil ederiz.',
+      'Sistem bileşenlerini, veri akışlarını ve erişim yetkilerini analiz ediyoruz. Girdi doğrulama, güvenli yapılandırma, hata yönetimi ve kayıt mekanizmalarını yazılım mimarisinin bir parçası olarak değerlendiriyoruz.',
   },
   {
     slug: 'otomasyon',
-    title: 'Sistemler birlikte çalışsın.',
-    name: 'Otomasyon & sistem entegrasyonu',
+    title: 'Entegre ve otomatik iş süreçleri.',
+    name: 'Otomasyon ve Sistem Entegrasyonu',
     icon: 'workflow',
     description:
-      'Tekrarlanan işleri azaltan, mevcut araçlarınız arasında veri akışını sağlayan bağlantılar.',
+      'Tekrarlanan operasyonel işlemleri azaltmaya ve farklı yazılım sistemleri arasında kontrollü veri akışı oluşturmaya yönelik otomasyon çözümleri geliştiriyoruz.',
     examples: [
-      'İş akışı otomasyonu',
-      'API ve sistem bağlantıları',
-      'Mevcut sisteme AI entegrasyonu',
+      'İş akışı ve süreç otomasyonu',
+      'API ve kurumsal sistem entegrasyonları',
+      'Veri aktarımı ve operasyonel izleme',
     ],
     approach:
-      'Mevcut sistemlerin arayüzlerini, hata durumlarını ve veri sahipliğini inceleriz. Tekrar denenebilir, izlenebilir ve kontrollü entegrasyon akışları tasarlarız.',
+      'Mevcut yazılım altyapısını, veri kaynaklarını ve iş kurallarını inceliyoruz. Entegrasyon süreçlerini hata yönetimi, veri tutarlılığı ve izlenebilirlik gereksinimlerine uygun biçimde tasarlıyoruz.',
   },
   {
     slug: 'ozel-yazilim',
-    title: 'Probleminize özel kod.',
-    name: 'Özel yazılım & algoritma geliştirme',
+    title: 'İhtiyaçlara özel yazılım sistemleri.',
+    name: 'Özel Yazılım ve Algoritma Geliştirme',
     icon: 'code',
-    description: 'Hazır araçların yetmediği noktada, işinizin mantığına göre geliştirilen yazılım.',
-    examples: ['Özel algoritmalar', 'Operasyon araçları', 'Veri işleme servisleri'],
+    description:
+      'Standart yazılımların karşılamadığı teknik gereksinimler için işletmeye özel uygulamalar, algoritmalar ve veri işleme sistemleri geliştiriyoruz.',
+    examples: [
+      'Kuruma özel web ve yönetim uygulamaları',
+      'Algoritma ve veri işleme servisleri',
+      'Operasyon takip ve raporlama sistemleri',
+    ],
     approach:
-      'İş kurallarını ve kabul kriterlerini açık hale getiririz. Modüler bileşenler, anlamlı testler ve belgelenmiş arayüzlerle sürdürülebilir bir temel kurarız.',
+      'İş gereksinimlerini ve mevcut altyapıyı değerlendirerek yazılım mimarisini oluşturuyoruz. Modüler geliştirme, test edilebilirlik, bakım kolaylığı ve entegrasyon gereksinimlerini proje kapsamına göre ele alıyoruz.',
   },
 ] as const;
+
+// EKİP ÇALIŞMALARI
+
 export const projects = [
   {
     slug: 'motionfighter',
@@ -81,7 +114,8 @@ export const projects = [
     tags: ['Python', 'YOLO', 'OpenCV', 'PyTorch'],
     description:
       'Hareket analizi, kişi tespiti ve zamansal sınıflandırmayı bir araya getiren çok aşamalı video analiz çalışması.',
-    source: 'https://github.com/huseyin-dgn/MotionFighter-for-YOLO',
+    source:
+      'https://github.com/huseyin-dgn/MotionFighter-for-YOLO',
     steps: [
       'Hareket analizi',
       'Kişi tespiti & ROI',
@@ -104,7 +138,12 @@ export const projects = [
     description:
       'CNN, bottleneck residual ve dikkat bloklarıyla görüntü sınıflandırma deneyleri için geliştirilen kütüphane.',
     source: 'https://github.com/huseyin-dgn/hyso',
-    steps: ['Veri hazırlama', 'CNN & residual bloklar', 'CBAM dikkat', 'Eğitim & değerlendirme'],
+    steps: [
+      'Veri hazırlama',
+      'CNN & residual bloklar',
+      'CBAM dikkat',
+      'Eğitim & değerlendirme',
+    ],
     detail:
       'README; CNN ve bottleneck residual blokları, CBAM dikkat yapısı, veri artırma, fit arayüzü ve eğitim callback desteğini açıklıyor. Erken durdurma, model kontrol noktası ve öğrenme oranı zamanlayıcısı belgelenmiş özellikler arasında.',
     limitation:
@@ -120,68 +159,84 @@ export const projects = [
     tags: ['Python', 'scikit-learn', 'pandas'],
     description:
       'Motor ve yakıt tüketimi verileriyle doğrusal ve polinomsal regresyon modellerini karşılaştıran tahmin çalışması.',
-    source: 'https://github.com/ilker-Akbal/CO2_Emission',
-    steps: ['Veri ön işleme', 'Keşifsel analiz', 'Regresyon modelleri', 'Model karşılaştırma'],
+    source:
+      'https://github.com/ilker-Akbal/CO2_Emission',
+    steps: [
+      'Veri ön işleme',
+      'Keşifsel analiz',
+      'Regresyon modelleri',
+      'Model karşılaştırma',
+    ],
     detail:
       'Depodaki README; araç motor özellikleri ve yakıt tüketimi verileriyle CO₂ emisyonu tahminini açıklıyor. Veri hazırlama, keşifsel analiz, polinom derecesi seçimi ve doğrusal/polinomsal regresyon karşılaştırması çalışma akışını oluşturuyor.',
     limitation:
       'Eğitim ve deney amaçlı açık kaynak çalışmasıdır. Sonuçlar saha başarısı, ticari referans veya garanti olarak sunulmaz.',
   },
 ] as const;
+
+// NASIL ÇALIŞIYORUZ?
+
 export const processSteps = [
   {
     title: 'İhtiyaç analizi',
-    label: 'Doğru soruyla başlarız.',
+    label: 'Gereksinimleri belirliyoruz.',
     description:
-      'İş hedefinizi, teknik probleminizi ve mevcut altyapınızı anlarız. Varsayımları ve kısıtları birlikte görünür hale getiririz.',
-    output: 'Problem tanımı · Kapsam · Kabul kriterleri',
+      'Projenin hedeflerini, mevcut iş akışlarını ve teknik altyapısını değerlendiriyoruz. Kapsamı, kısıtları ve kabul kriterlerini netleştiriyoruz.',
+    output:
+      'Gereksinimler · Proje kapsamı · Kabul kriterleri',
   },
   {
     title: 'Çözüm tasarımı',
-    label: 'Önce sistemi kurarız.',
+    label: 'Teknik mimariyi oluşturuyoruz.',
     description:
-      'Veri akışlarını, mimariyi ve teknoloji seçeneklerini değerlendiririz. Riskli varsayımları küçük prototiplerle sınarız.',
-    output: 'Mimari tasarım · Fizibilite · Teknik yol haritası',
+      'Sistem mimarisini, veri akışlarını ve teknoloji seçeneklerini değerlendiriyoruz. Uygulanabilirliği ve olası teknik riskleri tasarım aşamasında ele alıyoruz.',
+    output:
+      'Sistem mimarisi · Fizibilite · Teknik plan',
   },
   {
     title: 'Geliştirme ve test',
-    label: 'Ölçer, geliştirir, doğrularız.',
+    label: 'Geliştiriyor ve doğruluyoruz.',
     description:
-      'Çözümü modüler adımlarla geliştiririz. Algoritmaları ve entegrasyonları belirlenen kabul kriterlerine göre test ederiz.',
-    output: 'Çalışan bileşenler · Test çıktıları · Teknik belgeler',
+      'Yazılım bileşenlerini belirlenen gereksinimlere göre geliştiriyoruz. İşlevsellik, doğruluk ve performansı uygun test senaryolarıyla değerlendiriyoruz.',
+    output:
+      'Yazılım bileşenleri · Test sonuçları · Teknik belgeler',
   },
   {
     title: 'Entegrasyon',
-    label: 'Gerçek sisteme bağlarız.',
+    label: 'Mevcut sistemlere uyarlıyoruz.',
     description:
-      'Çözümü mevcut iş akışınıza kontrollü biçimde entegre ederiz. Hata senaryolarını, izlemeyi ve devri birlikte planlarız.',
-    output: 'Entegrasyon · İzleme planı · Kullanım belgeleri',
+      'Geliştirilen çözümün mevcut altyapıyla uyumunu değerlendiriyoruz. Veri akışlarını, hata senaryolarını ve sistemin kullanım koşullarını kontrol ediyoruz.',
+    output:
+      'Sistem entegrasyonu · Kontroller · Kullanım belgeleri',
   },
 ];
+
+// SEKTÖREL KULLANIM SENARYOLARI
+
 export const useCases = [
   {
     sector: 'ÜRETİM & KALİTE',
-    title: 'Her ürün, aynı dikkatle.',
+    title: 'Görsel kalite kontrol.',
     description:
-      'Üretim hattındaki görsel kusurları belirlemek ve operatöre inceleme için işaretlemek.',
+      'Üretim hattındaki görsel kusur adaylarının belirlenmesi ve operatör incelemesi için işaretlenmesi.',
     input: 'Kamera görüntüsü',
     output: 'Kusur adayı & inceleme kaydı',
     slug: 'goruntu-isleme',
   },
   {
     sector: 'GÜVENLİK & İZLEME',
-    title: 'Görüntünün ötesini görün.',
+    title: 'Kamera tabanlı olay analizi.',
     description:
-      'Tanımlanmış bölgelerdeki ihlalleri analiz ederek ilgili olayları önceliklendirmek.',
+      'Tanımlanmış alanlardaki ihlal adaylarının analiz edilmesi ve ilgili olayların bildirim için önceliklendirilmesi.',
     input: 'Yetkili kamera akışı',
     output: 'Olay kaydı & bildirim',
     slug: 'goruntu-isleme',
   },
   {
     sector: 'OPERASYON & OTOMASYON',
-    title: 'Tekrarlanan işe akıllı akış.',
+    title: 'İş süreçlerinin otomasyonu.',
     description:
-      'Birbirinden kopuk araçlar arasında veri aktarımını ve rutin kontrolleri otomatikleştirmek.',
+      'Farklı yazılım sistemleri arasında veri aktarımı ve tekrarlanan operasyonel kontrollerin otomatikleştirilmesi.',
     input: 'API & operasyon verisi',
     output: 'Bağlantılı iş akışı',
     slug: 'otomasyon',

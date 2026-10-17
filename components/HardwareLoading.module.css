@@ -1,0 +1,4 @@
+.loading { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; padding: 24px; text-align: center; color: #b4c0af; background: #0b3027; }
+.mark { font: 9px/1.6 monospace; letter-spacing: 2px; color: #c8a968; }
+.loading p { margin: 0; font-size: 13px; line-height: 1.7; }
+.loading > span:last-child { max-width: 250px; font-size: 10px; line-height: 1.8; color: #91a58f; }

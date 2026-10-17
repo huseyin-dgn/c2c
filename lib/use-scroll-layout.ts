@@ -1,10 +1,15 @@
 'use client';
 import { useEffect, type RefObject } from 'react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-let refreshFrame:number|null=null;
+let pendingRefresh:Promise<void>|null=null;
 export function requestScrollRefresh() {
-  if(refreshFrame!==null)return;
-  refreshFrame=requestAnimationFrame(()=>{refreshFrame=null;if(ScrollTrigger.getAll().length)ScrollTrigger.refresh();});
+  if(pendingRefresh)return pendingRefresh;
+  pendingRefresh=new Promise<void>(resolve=>requestAnimationFrame(()=>{
+    pendingRefresh=null;
+    if(ScrollTrigger.getAll().length)ScrollTrigger.refresh();
+    resolve();
+  }));
+  return pendingRefresh;
 }
 
 /** Interactive copy can change the height of content above a pinned scene. */

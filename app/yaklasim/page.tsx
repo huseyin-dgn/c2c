@@ -1,26 +1,35 @@
+
 import PageIntro from '@/components/PageIntro';
 import ProcessTimeline from '@/components/ProcessTimeline';
 import TechnicalApproach from '@/components/TechnicalApproach';
 import ContactSection from '@/components/ContactSection';
 import { pageMetadata } from '@/lib/site';
+
 export const metadata = pageMetadata(
   'Nasıl Çalışıyoruz?',
-  'İhtiyaç analizi, çözüm tasarımı, geliştirme, test ve entegrasyon aşamalarından oluşan mühendislik sürecimiz.',
+  'C2C Mühendislik, ihtiyaç analizinden teknik tasarıma, yazılım geliştirmeden test ve entegrasyona uzanan sistematik bir mühendislik yaklaşımı benimser.',
   '/yaklasim',
 );
+
 export default function ApproachPage() {
   return (
     <>
       <PageIntro
-        label="YAKLAŞIMIMIZ"
-        title="Önce doğru sorular."
-        accent="Sonra çalışan sistemler."
-        description="Teknolojiden önce problemi konuşuruz. Her adımda kapsamı, varsayımları ve beklenen çıktıları görünür tutarız."
+        label="NASIL ÇALIŞIYORUZ?"
+        title="İhtiyacı analiz ediyor,"
+        accent="çözümü mühendislikle geliştiriyoruz."
+        description="Her projeyi teknik gereksinimler, mevcut altyapı ve hedeflenen çıktılar doğrultusunda ele alıyoruz. Analiz, tasarım, geliştirme, test ve entegrasyon aşamalarını sistematik bir süreç olarak planlıyoruz."
       />
-      <section className="container approach-page">
+
+      <section
+        className="container approach-page"
+        aria-label="Proje geliştirme sürecimiz"
+      >
         <ProcessTimeline />
       </section>
+
       <TechnicalApproach />
+
       <ContactSection />
     </>
   );

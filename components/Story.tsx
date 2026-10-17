@@ -12,6 +12,7 @@ import { recordSceneError } from '@/lib/scene-diagnostics';
 import { requestScrollRefresh } from '@/lib/use-scroll-layout';
 import ProcessorPoster from './ProcessorPoster';
 import {heroTiming,heroAssemblyProgress} from '@/lib/hero-sequence';
+import { pageStartEvent } from '@/lib/navigation-scroll';
 import './processor-world.css';
 const Scene = dynamic(() => import('./EngineeringScene'), {
   ssr: false,
@@ -72,16 +73,34 @@ export default function Story() {
   const mobile = useMediaQuery('(max-width:1023px)', true);
   const [intent,setIntent]=useState(false);
   const showScene=!mobile||intent;
+  const preparingScene=!reduced&&showScene&&renderState==='loading';
   useEffect(()=>{
     if(!mobile||intent||reduced)return;
     const activate=()=>{if(scrollY>4&&root.current&&root.current.getBoundingClientRect().bottom>0)setIntent(true);};
+    // Scroll restoration can happen before this effect subscribes.
+    activate();
+    const element=root.current;
+    const prepareOnInput=(event:Event)=>{
+      // Start critical Hero work before the first scroll event, without
+      // preloading the scene for navigation taps or before any mobile intent.
+      if(event.target instanceof Element&&event.target.closest('a,button,input,select,textarea'))return;
+      if(element&&element.getBoundingClientRect().bottom>0)setIntent(true);
+    };
+    element?.addEventListener('pointerdown',prepareOnInput,{passive:true});
+    element?.addEventListener('wheel',prepareOnInput,{passive:true});
     window.addEventListener('scroll',activate,{passive:true});
-    return()=>window.removeEventListener('scroll',activate);
+    window.addEventListener('pageshow',activate);
+    return()=>{element?.removeEventListener('pointerdown',prepareOnInput);element?.removeEventListener('wheel',prepareOnInput);window.removeEventListener('scroll',activate);window.removeEventListener('pageshow',activate);};
   },[mobile,intent,reduced]);
   useLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
     const mm = gsap.matchMedia();
     mm.add('(prefers-reduced-motion: no-preference)', () => {
+      // Native scroll anchoring must not compensate for ScrollTrigger's pin spacer.
+      // Otherwise an early 120px scroll can jump past the whole assembly sequence.
+      const html=document.documentElement,previousAnchor=html.style.overflowAnchor;
+      html.style.overflowAnchor='none';
+      let restart: () => void;
       const ctx = gsap.context(() => {
         const panels = gsap.utils.toArray<HTMLElement>('.story-chapter', root.current);
         gsap.set(panels.slice(1), { autoAlpha: 0, y: 45 });
@@ -132,9 +151,19 @@ export default function Story() {
         }
         timeline.fromTo('.scene-caption', { opacity: 0.5 }, { opacity: 1, duration: 0.2 }, 0.75);
         timeline.fromTo('.story-atmosphere', { opacity: 0.6 }, { opacity: 1, duration: 0.5 }, 0.12);
+        restart = () => {
+          if (scrollY !== 0) return;
+          // Finish the scrub towards its new scroll target before seeking the
+          // existing timeline. Keep the prepared Canvas and all model assets.
+          ScrollTrigger.update();
+          timeline.scrollTrigger?.getTween()?.progress(1);
+          timeline.progress(0);
+          invalidateScene.current();
+        };
+        window.addEventListener(pageStartEvent, restart);
         document.fonts.ready.then(requestScrollRefresh);
       }, root);
-      return () => ctx.revert();
+      return () => {window.removeEventListener(pageStartEvent,restart);ctx.revert();html.style.overflowAnchor=previousAnchor;};
     });
     return () => mm.revert();
   }, []);
@@ -216,10 +245,10 @@ export default function Story() {
             </article>
           ))}
         </div>
-        <div className="scene-caption" aria-hidden="true">
+        <div className={`scene-caption${preparingScene?' is-preparing':''}`} aria-hidden={preparingScene?undefined:true}>
           <span className="caption-rule" />
-          <span>
-            Temsili sistem mimarisi<small>Mühendislik yaklaşımımızın görsel metaforu.</small>
+          <span role={preparingScene?'status':undefined} aria-live={preparingScene?'polite':undefined}>
+            {preparingScene?'3D görünüm hazırlanıyor.':'Temsili sistem mimarisi'}<small>{preparingScene?'Model ve materyaller birlikte gösterilecek.':'Mühendislik yaklaşımımızın görsel metaforu.'}</small>
           </span>
           <span className="caption-dot" />
         </div>

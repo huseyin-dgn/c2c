@@ -1,17 +1,17 @@
 'use client';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Suspense } from 'react';
-import MotherboardModel from './MotherboardModel';
+import MotherboardModel, {MotherboardReady,preloadMotherboard} from './MotherboardModel';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { hardware, type HardwareId, type Vector3Tuple } from '@/lib/hardware';
 import { useMediaQuery } from '@/lib/use-media-query';
-import { Studio, StudioReady, RendererWarmup } from './EngineeringScene';
+import { Studio, StudioReady, RendererWarmup, preloadStudio } from './ScenePreparation';
 import HardwareFallback from './HardwareFallback';
+import HardwareLoading from './HardwareLoading';
 import { recordSceneError } from '@/lib/scene-diagnostics';
-type Props = { selected: HardwareId | null; hovered: HardwareId | null; exploded: boolean; paused: boolean; onSelect: (part: HardwareId | null) => void; onHover: (part: HardwareId | null) => void };
-let hardwareIntroPlayed=false;
+type Props = { interacted:boolean; introPlayed:{current:boolean}; active:boolean; selected: HardwareId | null; hovered: HardwareId | null; exploded: boolean; paused: boolean; onSelect: (part: HardwareId | null) => void; onHover: (part: HardwareId | null) => void };
 const separationOrder:HardwareId[]=['cooling','gpu','ram','ssd','cpu','io'];
 const separationEase=gsap.parseEase('power2.inOut');
 function separationProgress(id:HardwareId,progress:number){
@@ -249,13 +249,14 @@ function ProductGround(){
   </group>;
 }
 function Assembly(props: Props & { mobile: boolean; ready: boolean; reduced: boolean }) {
-  const { invalidate } = useThree();
+  const { invalidate, gl } = useThree();
   const parts = useRef<Partial<Record<HardwareId, THREE.Group>>>({});
   const fan = useRef<THREE.Group>(null);
   const fanMotion = useRef({speed:0,angle:0});
   const explosion = useRef({ value: props.exploded ? 1 : 0 });
   const view = useRef({ x:7.6, y:7.5, z:9.5, tx:0, ty:.3, tz:0 });
-  const introStarted=useRef(false);
+  const rotation=useRef({yaw:0,intro:0});
+  const introTween=useRef<gsap.core.Timeline|null>(null);
   const clock = useRef(0);
   const frames=useRef(0);
   const active = props.selected ?? props.hovered;
@@ -340,6 +341,7 @@ function Assembly(props: Props & { mobile: boolean; ready: boolean; reduced: boo
   useEffect(() => () => { for (const finish of Object.values(materials)) for (const material of Object.values(finish)) material.dispose(); }, [materials]);
   useEffect(() => { invalidate(); }, [active,invalidate]);
   useEffect(() => {
+    if(!props.active)return;
     const target=props.exploded?1:0;
     // A linear master clock makes assembling the exact reverse of separation.
     const tween = gsap.to(explosion.current, {
@@ -347,27 +349,82 @@ function Assembly(props: Props & { mobile: boolean; ready: boolean; reduced: boo
       ease:'none',onUpdate:invalidate,
     });
     return () => { tween.kill(); };
-  }, [props.exploded,props.reduced,invalidate]);
-  useEffect(() => {
-    if(!props.ready)return;
-    const inspecting=props.selected!==null && props.selected!=='motherboard';
-    const entering=!props.selected && (!hardwareIntroPlayed || introStarted.current) && !props.reduced;
-    if(entering && !introStarted.current){
-      view.current.x*=1.045;view.current.y*=1.045;view.current.z*=1.045;
-      introStarted.current=true;
-    }
-    hardwareIntroPlayed=true;
-    if(props.selected || props.reduced)introStarted.current=false;
-    const zoom=inspecting?(props.mobile?.9:.78):1;
-    const tween=gsap.to(view.current,{
-      x:7.6*zoom,y:7.5*zoom,z:9.5*zoom,
-      duration:props.reduced?0:entering?1.35:1.05,
-      ease:entering?'power2.out':'power2.inOut',onUpdate:invalidate,
-      onComplete:()=>{introStarted.current=false;},
-    });
+  }, [props.exploded,props.reduced,props.active,invalidate]);
+  const interruptIntro=useCallback(()=>{
+    if(!introTween.current)return;
+    introTween.current.kill();introTween.current=null;
+    // Hand the current angle to the user without snapping back to the start.
+    rotation.current.yaw+=rotation.current.intro;rotation.current.intro=0;
+    gl.domElement.dataset.hardwareIntro='interrupted';
     invalidate();
+  },[gl,invalidate]);
+  useLayoutEffect(()=>{
+    if(!props.ready||!props.active)return;
+    if(props.interacted||props.selected||props.exploded||props.paused||props.reduced){interruptIntro();return;}
+    if(props.introPlayed.current)return;
+    props.introPlayed.current=true;
+    gl.domElement.dataset.hardwareIntro='running';
+    const tween=gsap.timeline({onUpdate:invalidate,onComplete:()=>{
+      introTween.current=null;gl.domElement.dataset.hardwareIntro='complete';
+    }});
+    introTween.current=tween;
+    const angle=props.mobile?.065:.1;
+    tween.to(rotation.current,{intro:-angle,duration:2,ease:'sine.inOut'})
+      .to(rotation.current,{intro:0,duration:2,ease:'sine.inOut'});
+    return interruptIntro;
+  },[props.ready,props.active,props.interacted,props.selected,props.exploded,props.paused,props.reduced,props.mobile,props.introPlayed,gl,invalidate,interruptIntro]);
+  useEffect(()=>{
+    const canvas=gl.domElement;
+    let drag:{id:number;x:number;y:number;yaw:number}|null=null,dragged=false;
+    canvas.tabIndex=0;
+    canvas.setAttribute('aria-label','3D donanım modeli. Döndürmek için sürükleyin veya sol ve sağ ok tuşlarını kullanın.');
+    canvas.setAttribute('aria-describedby','hardware-guide');
+    const down=(event:PointerEvent)=>{
+      if(event.button!==0)return;
+      interruptIntro();dragged=false;
+      drag={id:event.pointerId,x:event.clientX,y:event.clientY,yaw:rotation.current.yaw};
+      canvas.setPointerCapture(event.pointerId);
+    };
+    const move=(event:PointerEvent)=>{
+      if(!drag||event.pointerId!==drag.id)return;
+      const dx=event.clientX-drag.x,dy=event.clientY-drag.y;
+      if(!dragged&&(Math.abs(dx)<6||Math.abs(dy)>Math.abs(dx)))return;
+      dragged=true;rotation.current.yaw=THREE.MathUtils.clamp(drag.yaw+dx*.006,-.75,.75);
+      invalidate();
+    };
+    const up=()=>{drag=null;};
+    const click=(event:MouseEvent)=>{
+      if(dragged){event.preventDefault();event.stopImmediatePropagation();dragged=false;}
+    };
+    const key=(event:KeyboardEvent)=>{
+      if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;
+      event.preventDefault();interruptIntro();
+      rotation.current.yaw=THREE.MathUtils.clamp(rotation.current.yaw+(event.key==='ArrowLeft'?-.1:.1),-.75,.75);
+      invalidate();
+    };
+    canvas.addEventListener('pointerdown',down);
+    canvas.addEventListener('pointermove',move);
+    canvas.addEventListener('pointerup',up);
+    canvas.addEventListener('pointercancel',up);
+    canvas.addEventListener('click',click,true);
+    canvas.addEventListener('keydown',key);
+    return()=>{
+      canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',move);
+      canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',up);
+      canvas.removeEventListener('click',click,true);canvas.removeEventListener('keydown',key);
+    };
+  },[gl,invalidate,interruptIntro]);
+  useEffect(() => {
+    if(!props.ready||!props.active)return;
+    const inspecting=props.selected!==null && props.selected!=='motherboard';
+    const zoom=inspecting?(props.mobile?.9:.78):1;
+    if(view.current.x===7.6*zoom&&view.current.y===7.5*zoom&&view.current.z===9.5*zoom)return;
+    const tween=gsap.to(view.current,{
+      x:7.6*zoom,y:7.5*zoom,z:9.5*zoom,duration:props.reduced?0:1.05,
+      ease:'power2.inOut',onUpdate:invalidate,
+    });
     return ()=>{tween.kill();};
-  },[props.selected,props.mobile,props.ready,props.reduced,invalidate]);
+  },[props.selected,props.mobile,props.ready,props.reduced,props.active,invalidate]);
   useFrame(({ camera,gl,invalidate }, delta) => {
     const v=view.current, factor=props.mobile?1.12:1;
     const step=Math.min(delta,.05);
@@ -379,9 +436,11 @@ function Assembly(props: Props & { mobile: boolean; ready: boolean; reduced: boo
         const target=active && active!==part.id ? 0 : 1;
         const blend=props.reduced?target:THREE.MathUtils.damp(material.userData.emphasis as number,target,10,step);
         const emphasis=Math.abs(blend-target)<.001?target:blend;
-        material.userData.emphasis=emphasis;
-        material.color.copy(original).multiplyScalar(.74+.26*emphasis);
-        material.envMapIntensity=(material.userData.reflection as number)*(.68+.32*emphasis);
+        if(material.userData.emphasis!==emphasis){
+          material.userData.emphasis=emphasis;
+          material.color.copy(original).multiplyScalar(.74+.26*emphasis);
+          material.envMapIntensity=(material.userData.reflection as number)*(.68+.32*emphasis);
+        }
         if(emphasis!==target)invalidate();
         material.emissiveIntensity=0;
       }
@@ -397,7 +456,8 @@ function Assembly(props: Props & { mobile: boolean; ready: boolean; reduced: boo
       invalidate();return next;
     };
     v.tx=settle(v.tx,targetX);v.ty=settle(v.ty,targetY);v.tz=settle(v.tz,targetZ);
-    camera.position.set(v.tx+v.x*factor,v.ty+v.y*factor,v.tz+v.z*factor);
+    const angle=rotation.current.yaw+rotation.current.intro,c=Math.cos(angle),s=Math.sin(angle);
+    camera.position.set(v.tx+(v.x*c+v.z*s)*factor,v.ty+v.y*factor,v.tz+(v.z*c-v.x*s)*factor);
     camera.lookAt(v.tx,v.ty,v.tz);
     if(active && !props.paused && !props.reduced)clock.current+=step;
     if(!props.paused && !props.reduced){
@@ -408,6 +468,7 @@ function Assembly(props: Props & { mobile: boolean; ready: boolean; reduced: boo
       if(motion.speed>0)invalidate();
     }
     if(fan.current)fan.current.rotation.y=fanMotion.current.angle;
+    gl.domElement.dataset.hardwareYaw=(rotation.current.yaw+rotation.current.intro).toFixed(4);
     gl.domElement.dataset.hardwarePart=active??'none'; gl.domElement.dataset.explosion=explosion.current.value.toFixed(3);
     gl.domElement.dataset.flowFrame=String(Math.round(clock.current*1000));
     gl.domElement.dataset.hardwareFrame=String(++frames.current);
@@ -429,14 +490,12 @@ function Assembly(props: Props & { mobile: boolean; ready: boolean; reduced: boo
     <directionalLight position={[1,4,-5]} intensity={1.15} color="#edf0f3" />
 {group('motherboard',
   <>
-  <Suspense fallback={null}>
     <group
       position={[0, 0.16, 0]}
       scale={[0.56, 0.56, 0.49]}
     >
       <MotherboardModel mobile={props.mobile} product />
     </group>
-  </Suspense>
   {[-2.2624,2.2624].flatMap(x=>[-1.8277,1.8277].map(z=><mesh key={`${x}${z}`} position={[x,-.218,z]} material={materials.motherboard.metal} castShadow><cylinderGeometry args={[.047,.055,.05,12]} /></mesh>))}
   </>
 )}
@@ -502,9 +561,28 @@ function Assembly(props: Props & { mobile: boolean; ready: boolean; reduced: boo
 export default function HardwareScene(props:Props) {
   const mobile=useMediaQuery('(max-width:767px)',true);
   const reduced=useMediaQuery('(prefers-reduced-motion: reduce)',true);
+  preloadMotherboard(mobile);preloadStudio();
   const [lost,setLost]=useState(false);
   const [prepared,setPrepared]=useState(false);
+  const render=useRef<()=>void>(()=>{});
+  const preparing=useCallback(()=>setPrepared(false),[]);
   const compiled=useCallback(()=>setPrepared(true),[]),failed=useCallback(()=>setLost(true),[]);
+  useEffect(()=>{if(prepared&&props.active)render.current();},[prepared,props.active]);
   if(lost)return <HardwareFallback active={props.selected} exploded={props.exploded} />;
-  return <Canvas onPointerMissed={event=>{if(event.type==='click'){props.onHover(null);props.onSelect(null);}}} shadows={mobile?false:'percentage'} className="computer-canvas" dpr={[1,mobile?1:1.4]} camera={{position:[7.6,7.8,9.5],fov:mobile?31:22.5}} frameloop={prepared?'demand':'never'} gl={{alpha:true,antialias:true,powerPreference:'high-performance'}} fallback={<HardwareFallback active={props.selected} />}><StudioReady><ContextWatcher onLost={failed} /><Assembly {...props} mobile={mobile} ready={prepared} reduced={reduced} /><RendererWarmup onReady={compiled} onError={failed} /></StudioReady></Canvas>;
+  return <div style={{height:'100%',position:'relative'}} data-hardware-ready={String(prepared)}>
+    <Canvas onCreated={({invalidate})=>{render.current=invalidate;}}
+      style={{visibility:prepared?'visible':'hidden'}}
+      onPointerMissed={event=>{if(event.type==='click'){props.onHover(null);props.onSelect(null);}}}
+      shadows={mobile?false:'percentage'} className="computer-canvas" dpr={[1,mobile?1:1.4]}
+      camera={{position:[7.6,7.8,9.5],fov:mobile?31:22.5}}
+      frameloop={prepared&&props.active?'demand':'never'}
+      gl={{alpha:true,antialias:true,powerPreference:'high-performance'}} fallback={<HardwareFallback active={props.selected} />}>
+      <Suspense fallback={null}><MotherboardReady mobile={mobile}><StudioReady>
+        <ContextWatcher onLost={failed} />
+        <Assembly {...props} mobile={mobile} ready={prepared} reduced={reduced} />
+        <RendererWarmup key={String(mobile)} onStart={preparing} onReady={compiled} onError={failed} />
+      </StudioReady></MotherboardReady></Suspense>
+    </Canvas>
+    {!prepared&&<HardwareLoading />}
+  </div>;
 }

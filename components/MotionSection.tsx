@@ -4,18 +4,22 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 /** Server-rendered content stays visible without JS. Motion is scoped and reversible. */
-export default function MotionSection({ children, className, motionKey, id }: {
+export default function MotionSection({ children, className, motionKey, id, mobileReveal = false }: {
   children: ReactNode;
   className?: string;
   motionKey: string;
   id?: string;
+  mobileReveal?: boolean;
 }) {
   const root = useRef<HTMLElement>(null);
   useLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
     const media = gsap.matchMedia();
     const element = root.current!;
-    media.add({ motion: '(prefers-reduced-motion: no-preference)', reduced: '(prefers-reduced-motion: reduce)' }, (context) => {
+    media.add({
+      motion: '(prefers-reduced-motion: no-preference)', reduced: '(prefers-reduced-motion: reduce)',
+      ...(mobileReveal ? { mobile: '(max-width: 1023px)' } : {}),
+    }, (context) => {
       if (context.conditions?.reduced) {
         element.dataset.motionState = 'reduced';
         element.dataset.motionProgress = '1';
@@ -36,6 +40,15 @@ export default function MotionSection({ children, className, motionKey, id }: {
       const copy = select('[data-motion="copy"]');
       const visuals = select('[data-motion="visual"]');
       const mechanisms = select('[data-mechanism]');
+      if (mobileReveal && context.conditions?.mobile) {
+        // Stacked chapters must remain readable before their scroll reveal completes.
+        // Keep gentle movement and the live diagram flow without clipping its controls.
+        if (headings.length) timeline.fromTo(headings, { y: 12 }, { y: 0, duration: 0.7 }, 0);
+        if (mechanisms.length) timeline.fromTo(mechanisms,
+          { y: 8 }, { y: 0, duration: 0.8, stagger: 0.04 }, 0);
+        timeline.to({}, { duration: 0.01 }, Math.max(1, timeline.duration()));
+        return;
+      }
       if (headings.length) timeline.fromTo(headings,
         { y: 55, clipPath: 'inset(0% 0% 100% 0%)' },
         { y: 0, clipPath: 'inset(0% 0% 0% 0%)', duration: 0.7 }, 0);
@@ -57,6 +70,6 @@ export default function MotionSection({ children, className, motionKey, id }: {
       timeline.to({}, { duration: 0.01 }, Math.max(1, timeline.duration()));
     }, root);
     return () => media.revert();
-  }, [motionKey]);
+  }, [motionKey, mobileReveal]);
   return <section ref={root} id={id} className={className} data-motion-region={motionKey} data-motion-state="pending" data-motion-progress="0">{children}</section>;
 }

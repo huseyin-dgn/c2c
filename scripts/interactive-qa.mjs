@@ -24,7 +24,7 @@ try{
     if(viewport.width<1024){await page.waitForFunction(()=>document.querySelector('.story')?.dataset.renderer==='poster');await page.evaluate(()=>scrollTo(0,12));}
     await page.waitForSelector('.story canvas[data-camera]');
     await page.mouse.move(0,0);
-    const result={...viewport,hardware:[],camera:[],showcase:[],pipeline:[],overflow:[]};
+    const result={...viewport,hardware:[],showcase:[],pipeline:[],overflow:[]};
     await focus('.hardware-viewport');await page.waitForSelector('.hardware-viewport canvas');
     for(const id of ['motherboard','cpu','gpu','ram','ssd','cooling','io']){
       const button=page.locator(`[data-hardware-button="${id}"]`);
@@ -64,27 +64,7 @@ try{
       await page.getByRole('button',{name:/^Donan.m ak.*s.rd.r$/}).click();
       await page.getByRole('button',{name:/^Se.imi s.f.rla$/}).click();await page.mouse.move(0,0);
     }
-    await focus('#kamera-deneyimi .demo-scenarios');
-    for(const [id,name] of [['intrusion','Alan ihlali'],['counting','Kişi / araç sayımı'],['equipment','İş güvenliği'],['quality','Kalite kontrol']]){
-      await page.getByRole('button',{name,exact:true}).click();
-      await page.getByRole('slider',{name:'Demo ilerlemesi'}).fill('900');
-      assert.equal(await page.locator('#kamera-deneyimi svg').getAttribute('data-camera-scenario'),id);
-      if(id==='counting')assert.match(await page.locator('.demo-event').innerText(),/Kişi: 1 · Araç: 1/);
-      else assert.equal(await page.locator('#kamera-deneyimi svg').getAttribute('data-camera-event'),'true');
-      assert.ok(await page.locator('#kamera-deneyimi [data-detection]').count()>0);
-      result.camera.push({id,status:await page.locator('.demo-event').innerText()});
-      await focus('.camera-screen');await shot(`${viewport.width}-camera-${id}`);
-    }
-    await page.getByRole('button',{name:'Tekrar oynat',exact:true}).click();
-    await page.waitForTimeout(500);
-    assert.ok(Number(await page.getByRole('slider',{name:'Demo ilerlemesi'}).inputValue())>0);
-    await page.getByRole('button',{name:'Duraklat',exact:true}).click();
-    const paused=await page.getByRole('slider',{name:'Demo ilerlemesi'}).inputValue();await page.waitForTimeout(250);
-    assert.equal(await page.getByRole('slider',{name:'Demo ilerlemesi'}).inputValue(),paused);
-    await page.getByRole('button',{name:'Oynat',exact:true}).click();await page.waitForTimeout(180);
-    assert.ok(Number(await page.getByRole('slider',{name:'Demo ilerlemesi'}).inputValue())>Number(paused));
-    await page.getByRole('button',{name:'Duraklat',exact:true}).click();
-    result.playPauseReplay=true;
+    assert.equal(await page.locator('#kamera-deneyimi').count(),0,'redundant camera demo is removed');
     assert.equal(await page.locator('.solution-film').count(),5);
     if(viewport.width>=1024){
       for(const progress of [0,.25,.5,.75,1,.75,.5,.25,0]){
@@ -130,7 +110,7 @@ try{
       const diagram=page.locator('.live-diagram').first();await diagram.locator('.diagram-controls button').nth(1).tap();assert.equal(await diagram.getAttribute('data-active'),'1');
       await focus('.problem-visual');await shot(`${viewport.width}-pipeline-mobile`);
     }
-    for(const selector of ['.story','#donanim','#kamera-deneyimi','#cozumler','#problemden-cozume','#calisma-sureci','.footer']){
+    for(const selector of ['.story','#donanim','#cozumler','#problemden-cozume','#calisma-sureci','.footer']){
       if(await page.locator(selector).count())await focus(selector);
       const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);assert.ok(overflow<=1,`${viewport.width} ${selector}: overflow ${overflow}`);result.overflow.push({selector,overflow});
     }
@@ -148,7 +128,6 @@ try{
   const reduced=await browser.newContext({viewport:{width:1440,height:900},reducedMotion:'reduce'});page=await reduced.newPage();await page.goto(base,{waitUntil:'networkidle'});
   assert.equal(await page.locator('canvas,.pin-spacer').count(),0);assert.equal(await page.locator('.solution-film').count(),5);
   await page.locator('[data-hardware-button="cpu"]').click();assert.match(await page.locator('.hardware-description').innerText(),/Genel amaçlı/);
-  await page.getByRole('slider',{name:'Demo ilerlemesi'}).fill('900');assert.equal(await page.locator('#kamera-deneyimi svg').getAttribute('data-camera-event'),'true');
   await page.locator('.pipeline-navigation button').last().click();assert.equal(await page.locator('#problemden-cozume').getAttribute('data-pipeline-stage'),'4');
   await focus('.problem-visual');await shot('reduced-motion');await reduced.close();report.checks.push('Reduced motion: no Canvas/pins, all content and manual controls available');
   const fallback=await browser.newContext({viewport:{width:1440,height:900},reducedMotion:'no-preference'});page=await fallback.newPage();

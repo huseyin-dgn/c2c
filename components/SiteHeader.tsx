@@ -1,12 +1,21 @@
 'use client';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import styles from './SiteHeaderProducts.module.css';
+import { usePathname, useRouter } from 'next/navigation';
+import { scrollToPageStart } from '@/lib/navigation-scroll';
 import { ArrowUpRight, Menu, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 export function Brand() {
+  const router = useRouter();
   return (
     <Link
       href="/"
+      onNavigate={(event) => {
+        if (location.pathname !== '/') return;
+        event.preventDefault();
+        if (location.hash || location.search) router.replace('/', { scroll: false });
+        scrollToPageStart();
+      }}
       className="brand"
       aria-label="c2c. MÜHENDİSLİK ENGINEERING & TECHNOLOGY — ana sayfa"
     >
@@ -22,6 +31,7 @@ export function Brand() {
 const links = [
   ['/cozumler', 'Çözümler'],
   ['/projeler', 'Neler geliştiriyoruz?'],
+  ['/urunlerimiz', 'Ürünlerimiz'],
   ['/yaklasim', 'Yaklaşımımız'],
   ['/hakkimizda', 'Hakkımızda'],
 ];
@@ -44,7 +54,7 @@ export default function SiteHeader() {
     <header className="site-header">
       <div className="header-inner">
         <Brand />
-        <nav className="desktop-nav" aria-label="Ana menü">
+        <nav className={`desktop-nav ${styles.navigation}`} aria-label="Ana menü">
           {links.map(([href, label]) => (
             <Link
               key={href}

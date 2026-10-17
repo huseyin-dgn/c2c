@@ -3,17 +3,18 @@ import { ArrowUpRight } from 'lucide-react';
 import { developmentAreas } from '@/lib/development-areas';
 import MotionSection from './MotionSection';
 import SystemDiagram from './SystemDiagram';
+import styles from './DevelopmentSection.module.css';
 
 export default function DevelopmentSection({ standalone = false }: { standalone?: boolean }) {
   return (
-    <section className="development-section" id="gelistirdiklerimiz" aria-label="Neler geliştiriyoruz?">
+    <section className={`development-section${standalone ? ` ${styles.standalone}` : ''}`} id="gelistirdiklerimiz" aria-label="Neler geliştiriyoruz?">
       {!standalone && <div className="container development-intro" id="cozumler">
         <span className="eyebrow">GELİŞTİREBİLDİĞİMİZ SİSTEMLER</span>
         <h2>Neler <em>geliştiriyoruz?</em></h2>
         <p>Görüntüyü bilgiye, veriyi karara, iş kurallarını çalışan yazılıma dönüştüren çözümler.</p>
       </div>}
-      <p className="container development-note">Aşağıdakiler çözüm alanlarımızdır; tamamlanmış müşteri projeleri veya ticari referanslar değildir.</p>
-      {developmentAreas.map(area => <MotionSection key={area.kind} motionKey={`development-${area.kind}`} className={`capability-spread capability-${area.kind}`}>
+
+      {developmentAreas.map(area => <MotionSection key={area.kind} motionKey={`development-${area.kind}`} mobileReveal={standalone} className={`capability-spread capability-${area.kind}`}>
         <div className="container capability-layout">
           <div className="capability-illustration" data-motion="visual"><SystemDiagram kind={area.kind} /><p>{area.input} <span aria-hidden="true">→</span> {area.output}</p></div>
           <div className="capability-copy">

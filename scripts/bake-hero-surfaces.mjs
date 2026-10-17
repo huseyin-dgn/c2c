@@ -48,7 +48,6 @@ const trace=(x,y,w,h,mode)=>{
   }else{
     for(let row=4;row<h-4;row+=5){const offset=(row%15)*.4;s+=`<path d="M${x+4} ${y+row}h${w*.34+offset}v2h${w*.23}v-2h${w*.33-offset-8}" stroke="#b5baa0" stroke-opacity=".38" stroke-width="1"/>`;}
     for(let col=7;col<w-4;col+=11)s+=`<path d="M${x+col} ${y+3}v${h-6}" stroke="#87927b" stroke-opacity=".2" stroke-width="1"/>`;
-    // Unequal standard-cell placement/routing regions within the logic fabric.
     for(let row=12;row<h-20;row+=31)for(let col=10;col<w-22;col+=37){
       const inset=(row+col)%3*3;
       s+=`<path d="M${x+col} ${y+row}h${17+inset}v${9+inset}h-${8+inset}v5h-9Z" fill="#87917b" fill-opacity=".3"/>`;

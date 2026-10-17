@@ -1,65 +1,20 @@
 'use client';
 import { Canvas, useThree } from '@react-three/fiber';
-import { use, useCallback, useEffect, useRef, useState, type RefObject, type ReactNode } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import * as THREE from 'three';
 import ProcessorModel from './ProcessorModel';
 import ProcessorStudio, {ProcessorStudioReady} from './ProcessorStudio';
 import { useMediaQuery } from '@/lib/use-media-query';
 import CoreFallback from './CoreFallback';
 import { recordSceneError } from '@/lib/scene-diagnostics';
-import studioManifest from '@/public/models/studio-env.json';
+import {RendererWarmup} from './ScenePreparation';
+import {MotherboardReady,preloadMotherboard} from './MotherboardModel';
 import './processor-world.css';
 type Props = {
   progress: RefObject<{ value: number }>;
   onReady: (invalidate: () => void) => void;
   onFail: () => void;
 };
-let studioUsers=0;
-let studioEnvironment:Promise<THREE.DataTexture>|undefined;
-const loadStudioEnvironment=()=>studioEnvironment??=fetch('/models/studio-env.bin.gz').then(async response=>{
-  if(!response.ok||!response.body)throw new Error('Stüdyo yansıması yüklenemedi.');
-  const bytes=await new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
-  if(bytes.byteLength!==studioManifest.bytes)throw new Error('Stüdyo yansıma verisi eksik.');
-  const texture=new THREE.DataTexture(new Uint16Array(bytes),studioManifest.width,studioManifest.height,THREE.RGBAFormat,THREE.HalfFloatType);
-  texture.mapping=THREE.CubeUVReflectionMapping;
-  texture.minFilter=THREE.LinearFilter;texture.magFilter=THREE.LinearFilter;
-  texture.needsUpdate=true;
-  return texture;
-});
-export function StudioReady({children}:{children:ReactNode}) {use(loadStudioEnvironment());return children;}
-export function Studio() {
-  const { scene,invalidate } = useThree();
-  const texture=use(loadStudioEnvironment());
-  useEffect(() => {
-    studioUsers++;
-    // Re-upload this imperative Three texture after its last GPU owner disposed it.
-    // eslint-disable-next-line react-hooks/immutability
-    texture.needsUpdate=true;
-    const previous = scene.environment;
-    // R3F exposes an imperative Three.js scene, not immutable React state.
-    // eslint-disable-next-line react-hooks/immutability
-    scene.environment = texture;
-    invalidate();
-    return () => {
-      scene.environment = previous;
-      if(--studioUsers===0)texture.dispose();
-    };
-  }, [scene,texture,invalidate]);
-  return null;
-}
-export function RendererWarmup({onReady,onError}:{onReady:()=>void;onError:()=>void}) {
-  const {gl,scene,camera}=useThree();
-  useEffect(()=>{
-    let disposed=false;
-    // Yield to paint, then let KHR_parallel_shader_compile prepare the programs.
-    const timer=setTimeout(()=>{
-      void gl.compileAsync(scene,camera).then(()=>{if(!disposed)onReady();}).catch(error=>{if(!disposed){recordSceneError(error);onError();}});
-    },0);
-    return()=>{disposed=true;clearTimeout(timer);};
-  },[gl,scene,camera,onReady,onError]);
-  return null;
-}
-
 function HeroContextWatcher({onLost}:{onLost:()=>void}) {
   const {gl}=useThree();
   useEffect(()=>{
@@ -106,7 +61,10 @@ export default function EngineeringScene({ progress, onReady, onFail }: Props) {
   const [visible, setVisible] = useState(true),
     [lost, setLost] = useState(false);
   const [prepared,setPrepared]=useState(false);
-  const compiled=useCallback(()=>setPrepared(true),[]);
+  const preparing=useCallback(()=>setPrepared(false),[]);
+  const compiled=useCallback(()=>{setPrepared(true);onReady(invalidateScene.current);},[onReady]);
+  preloadMotherboard(mobile);
+  useEffect(()=>{if(visible&&prepared)invalidateScene.current();},[visible,prepared]);
   const failed=useCallback(()=>{setLost(true);onFail();},[onFail]);
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) =>
@@ -126,10 +84,10 @@ export default function EngineeringScene({ progress, onReady, onFail }: Props) {
   }, []);
   if (lost) return <CoreFallback />;
   return (
-    <div ref={host} className="engineering-canvas processor-world">
+    <div ref={host} className="engineering-canvas processor-world" style={{visibility:prepared?'visible':'hidden'}}>
       <Canvas
         camera={{ position: [8.7, 8.4, 12.5], fov: 39 }}
-        dpr={[1, mobile ? 1 : 1.5]}
+        dpr={[1, mobile ? 1.25 : 1.5]}
         shadows={mobile ? false : 'soft'}
         frameloop={visible && prepared ? 'demand' : 'never'}
         gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
@@ -137,13 +95,15 @@ export default function EngineeringScene({ progress, onReady, onFail }: Props) {
         onPointerMove={() => invalidateScene.current()}
         onCreated={({ invalidate }) => {
           invalidateScene.current = invalidate;
-          onReady(invalidate);
         }}
       >
         <HeroContextWatcher onLost={failed}/>
-        <HeroGpuLifecycle/>
-        <ProcessorStudioReady><ProcessorStudio /><ProcessorModel progress={progress} mobile={mobile} />
-        <RendererWarmup onReady={compiled} onError={failed} /></ProcessorStudioReady>
+        <Suspense fallback={null}><MotherboardReady mobile={mobile}>
+          <ProcessorStudioReady><ProcessorStudio /><ProcessorModel progress={progress} mobile={mobile} />
+            <HeroGpuLifecycle/>
+            <RendererWarmup key={String(mobile)} onStart={preparing} onReady={compiled} onError={failed} />
+          </ProcessorStudioReady>
+        </MotherboardReady></Suspense>
       </Canvas>
     </div>
   );

@@ -1,0 +1,19 @@
+/* Only the standalone /projeler chapters use this mobile layout. */
+@media (max-width: 1023px) {
+  .standalone :global(.capability-layout) {
+    padding-block: 36px;
+    row-gap: 24px;
+  }
+
+  .standalone :global(.capability-illustration) {
+    position: static;
+  }
+
+  .standalone :global(.live-diagram .system-diagram) {
+    min-height: 0;
+  }
+
+  .standalone :global(.diagram-description) {
+    min-height: 0;
+  }
+}

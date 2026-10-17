@@ -1,0 +1,11 @@
+.guide {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 24px;
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.guide span:first-child { color: var(--ivory); }

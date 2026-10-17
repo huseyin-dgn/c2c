@@ -1,9 +1,9 @@
 import Story from '@/components/Story';
 import AboutSection from '@/components/AboutSection';
 import HardwareExperience from '@/components/HardwareExperience';
-import CameraDemo from '@/components/CameraDemo';
 import SolutionsShowcase from '@/components/SolutionsShowcase';
 import ProblemStory from '@/components/ProblemStory';
+import IndustrialVisionDemo from '@/components/IndustrialVisionDemo';
 import ProcessTimeline from '@/components/ProcessTimeline';
 import SectionHeading from '@/components/SectionHeading';
 import ContactSection from '@/components/ContactSection';
@@ -22,8 +22,8 @@ export default function Home() {
       </div>
       <AboutSection />
       <HardwareExperience />
-      <CameraDemo />
       <SolutionsShowcase />
+      <IndustrialVisionDemo />
       <ProblemStory />
       <section className="section process-section container" id="calisma-sureci">
         <SectionHeading

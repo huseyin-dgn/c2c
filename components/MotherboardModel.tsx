@@ -1,5 +1,5 @@
 'use client';
-import {use,useEffect,useMemo} from 'react';
+import {use,useEffect,useMemo,type ReactNode} from 'react';
 import * as THREE from 'three';
 import {GLTFLoader,type GLTF} from 'three/addons/loaders/GLTFLoader.js';
 
@@ -35,6 +35,10 @@ function load(mobile:boolean){
   }
   return asset;
 }
+/** Start the critical board request alongside the processor textures. */
+export function preloadMotherboard(mobile:boolean){void load(mobile).catch(()=>{});}
+export function MotherboardReady({mobile,children}:{mobile:boolean;children:ReactNode}){use(load(mobile));return children;}
+
 export default function MotherboardModel({mobile,product=false}:{mobile:boolean;product?:boolean}){
   const asset=use(load(mobile));
   // Clone only the scene/materials for hardware: the Hero keeps its original finish.

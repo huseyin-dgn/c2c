@@ -21,7 +21,7 @@ export default function AboutSection() {
           <Link href="/hakkimizda" className="text-link">Ekibi ve yaklaşımımızı tanıyın <ArrowUpRight size={17} /></Link>
         </div>
       </div>
-      <div className="about-engineers" data-motion="copy">{team.map(person=><div key={person.name}><h3>{person.name}</h3><p>Tokat Gaziosmanpaşa Üniversitesi<br />Bilgisayar Mühendisliği mezunu</p><a className="text-link" href={person.github} target="_blank" rel="noopener noreferrer">GitHub çalışmalarını inceleyin ↗</a></div>)}</div>
+      <div className="about-engineers" data-motion="copy">{team.map(person=><div key={person.name}><h3>{person.name}</h3><p>Tokat Gaziosmanpaşa Üniversitesi<br />Bilgisayar Mühendisliği mezunu</p><a className="text-link" href={person.linkedin} target="_blank" rel="noopener noreferrer">GitHub çalışmalarını inceleyin ↗</a></div>)}</div>
     </div>
   </MotionSection>;
 }

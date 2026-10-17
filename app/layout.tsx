@@ -6,6 +6,7 @@ import './editorial.css';
 import './interactive.css';
 import SiteHeader from '@/components/SiteHeader';
 import SiteFooter from '@/components/SiteFooter';
+import NavigationScroll from '@/components/NavigationScroll';
 import { siteUrl } from '@/lib/site';
 export const viewport: Viewport = { themeColor: '#061f19' };
 export const metadata: Metadata = {
@@ -36,8 +37,44 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     ...(siteUrl ? { url: siteUrl } : {}),
   };
   return (
-    <html lang="tr">
+    <html lang="tr" data-scroll-behavior="smooth">
       <head>
+        <script id="c2c-initial-scroll" dangerouslySetInnerHTML={{ __html: `
+          (() => {
+            const navigation = performance.getEntriesByType('navigation')[0];
+            if (location.hash || navigation?.type === 'back_forward') return;
+            let interrupted = false, layoutReady = false, shown = false;
+            const inputs = ['wheel', 'touchstart', 'pointerdown', 'keydown'];
+            const interrupt = () => { interrupted = true; };
+            const cleanup = () => {
+              if (layoutReady && shown) inputs.forEach(type => removeEventListener(type, interrupt));
+            };
+            if (navigation?.type === 'reload') {
+              inputs.forEach(type => addEventListener(type, interrupt, { passive: true }));
+              window.__c2cFinishInitialScroll = () => {
+                layoutReady = true;
+                cleanup();
+                return !interrupted;
+              };
+            }
+            history.scrollRestoration = 'manual';
+            // Chromium can apply the previous entry's saved position while
+            // parsing, even after this document switches restoration to manual.
+            addEventListener('DOMContentLoaded', () => {
+              if (!interrupted) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+            }, { once: true });
+            addEventListener('pageshow', () => {
+              requestAnimationFrame(() => {
+                if (navigation?.type === 'reload' && !interrupted && !location.hash) {
+                  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                }
+                shown = true;
+                cleanup();
+                history.scrollRestoration = 'auto';
+              });
+            }, { once: true });
+          })();
+        ` }} />
         <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="preload" href="/fonts/inter-latin-ext.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
       </head>
@@ -66,6 +103,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SiteHeader />
         <main id="main-content">{children}</main>
         <SiteFooter />
+        <NavigationScroll />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

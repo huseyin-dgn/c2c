@@ -3,12 +3,26 @@
     linear-gradient(180deg, #000 72%, transparent 100%);
   mask-composite: intersect;
 }
+/* The server's reduced-motion fallback must not shift hash/history targets
+   while useSyncExternalStore hydrates the actual motion preference. */
+@media (prefers-reduced-motion: no-preference) {
+  .reduced-narrative { display: none; }
+}
 .processor-poster {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
-.scene-shell:has(canvas[data-model="motherboard-processor"]) > .processor-poster {
+.scene-caption.is-preparing {
+  display: flex;
+  font: 11px var(--font-sans);
+  letter-spacing: .02em;
+}
+.scene-caption.is-preparing small {
+  font: 10px var(--font-sans);
+  letter-spacing: 0;
+}
+.scene-shell:has(canvas[data-scene-ready="true"]) > .processor-poster {
   visibility: hidden;
   opacity: 0;
 }

@@ -34,7 +34,6 @@ try {
     await pause(700);
     await move(absoluteTop('.about-editorial') + 80, 4000);
     await move(absoluteTop('#donanim') + 80, 3800);
-    await move(absoluteTop('#kamera-deneyimi') + 80, 3800);
     await move(absoluteTop('#cozumler') + innerHeight * 1.4 + 80, 3800);
     await move(absoluteTop('#problemden-cozume') + innerHeight * 1.8, 5500);
     await pause(1000);

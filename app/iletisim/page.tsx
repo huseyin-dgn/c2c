@@ -1,61 +1,123 @@
+
 import { ArrowUpRight, Check } from 'lucide-react';
 import PageIntro from '@/components/PageIntro';
-import ContactForm from '@/components/ContactForm';
+import ContactModeSwitcher from '@/components/ContactModeSwitcher';
 import { contactConfigured } from '@/lib/contact';
-import { team } from '@/lib/content';
 import { pageMetadata } from '@/lib/site';
+
 export const metadata = pageMetadata(
-  'Projenizi Anlatın',
-  'Teknik probleminizi ve proje ihtiyacınızı C2C Mühendislik ile değerlendirmek için başlangıç noktası.',
+  'İletişim',
+  'C2C Mühendislik ile genel iletişim, iş birliği ve proje geliştirme talepleriniz için iletişime geçin.',
   '/iletisim',
 );
+
+const founders = [
+  {
+    name: 'Hüseyin Doğan',
+    linkedin:
+      'https://www.linkedin.com/in/huseyin-dogan-47136333b/',
+  },
+  {
+    name: 'İlker Akbal',
+    linkedin:
+      'https://www.linkedin.com/in/ilker-akbal-b963ab25a/',
+  },
+];
+
 export default async function ContactPage({
   searchParams,
 }: {
-  searchParams: Promise<{ alan?: string | string[] }>;
+  searchParams: Promise<{
+    alan?: string | string[];
+    tur?: string | string[];
+  }>;
 }) {
-  const query = await searchParams;
-  const selectedArea = typeof query.alan === 'string' ? query.alan : '';
+  const params = await searchParams;
+
+  const selectedArea =
+    typeof params.alan === 'string' ? params.alan : '';
+
+  const requestedMode =
+    typeof params.tur === 'string' ? params.tur : '';
+
+  const initialMode =
+    selectedArea || requestedMode === 'proje'
+      ? 'project'
+      : 'general';
+
   const enabled = contactConfigured();
+
   return (
     <>
       <PageIntro
-        label="İLETİŞİM / PROJE TALEBİ"
-        title="Bir problemle başlayalım."
-        accent="Çözümü birlikte düşünelim."
-        description="Hazır bir teknik şartnameye ihtiyacınız yok. Ne yapmak istediğinizi ve bugün sizi neyin zorladığını anlatmanız yeterli."
+        label="İLETİŞİM"
+        title="Bizimle iletişime geçin."
+        accent="İhtiyaçlarınızı birlikte değerlendirelim."
+        description="Genel sorularınız, iş birliği talepleriniz ve yazılım geliştirme projeleriniz için bizimle iletişime geçebilirsiniz."
       />
+
       <section className="container contact-page">
         <aside className="contact-aside">
-          <span className="eyebrow">İLK GÖRÜŞMEYE HAZIRLIK</span>
+          <span className="eyebrow">
+            C2C MÜHENDİSLİK
+          </span>
+
           <h2>
-            Doğru başlangıç,
+            İletişimin
             <br />
-            açık bir problem tanımı.
+            doğru başlangıç noktası.
           </h2>
+
+          <p>
+            Genel bir konuda bilgi almak veya
+            teknik bir proje hakkında görüşmek
+            için size uygun iletişim seçeneğini
+            kullanabilirsiniz.
+          </p>
+
           <ul>
             {[
-              'Çözmek istediğiniz teknik problem',
-              'Mevcut sistemleriniz ve veri kaynakları',
-              'Hedeflediğiniz çıktı ve kısıtlar',
+              'Genel sorular ve iş birliği talepleri',
+              'Yazılım ve teknoloji geliştirme projeleri',
+              'Teknik ihtiyaçların değerlendirilmesi',
             ].map((item) => (
               <li key={item}>
-                <Check size={17} />
+                <Check size={17} aria-hidden="true" />
                 {item}
               </li>
             ))}
           </ul>
-          <p>Gizli bilgi, parola, kişisel veri seti veya özel erişim anahtarı paylaşmayın.</p>
+
+          <p>
+            Formlarda parola, erişim anahtarı
+            veya hassas kişisel veri paylaşmayın.
+          </p>
+
           <div className="contact-github">
-            <span className="eyebrow">EKİBİ İNCELEYİN</span>
-            {team.map((person) => (
-              <a href={person.github} key={person.name} target="_blank" rel="noopener noreferrer">
-                {person.name} / GitHub <ArrowUpRight size={16} />
+            <span className="eyebrow">KURUCU EKİP</span>
+
+            {founders.map((founder) => (
+              <a
+                key={founder.name}
+                href={founder.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {founder.name} / LinkedIn
+                <ArrowUpRight
+                  size={16}
+                  aria-hidden="true"
+                />
               </a>
             ))}
           </div>
         </aside>
-        <ContactForm enabled={enabled} selectedArea={selectedArea} />
+
+        <ContactModeSwitcher
+          enabled={enabled}
+          selectedArea={selectedArea}
+          initialMode={initialMode}
+        />
       </section>
     </>
   );
